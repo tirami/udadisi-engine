@@ -1,0 +1,83 @@
+# TFW Application Server YAML.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.0.1"
+  title: TFW
+
+# Describe your paths here
+paths:
+  # This is a path endpoint. Change it.
+  /trends/{location}/{term}:
+    # This is a HTTP operation
+    get:
+      # Describe this verb here. Note: you can use markdown
+      description: |
+        Gets `Trend` objects.
+        Optional query param of **velocity** determines
+        minimum velocity of trends returned
+      # This is array of GET operation parameters:
+      parameters:
+        # An example parameter that is in query and is required
+        -
+          name: term
+          in: path
+          description: term to be included in the results
+          required: true
+          type: string
+          format: string
+        -
+          name: location
+          in: path
+          description: name of location that the results should be from
+          required: true
+          type: string
+          format: string
+        -
+          name: velocity
+          in: query
+          description: minimum velocity of trends
+          required: false
+          type: integer
+        -
+          name: from
+          in: query
+          description: date and time posts are from
+          required: false
+          type: string
+        -
+          name: interval
+          in: query
+          description: time interval to include post from from date
+          required: false
+          type: string
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            title: ArrayOfTrends
+            type: array
+            items:
+              title: Trend
+              type: object
+              properties:
+                term:
+                  type: string
+                counts:
+                  type: array
+                  items:
+                    title: count
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+                      source:
+                        type: string
+                        description: Source of the counts, i.e. Twitter, blogs, journals
