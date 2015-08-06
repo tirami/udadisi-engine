@@ -3,8 +3,8 @@
 Tirami TFW Application Server
 
 ### Server
-    go get github.com/tirami/tfw-application-server/server
-    
+    go get github.com/tirami/tfw-application-server
+
 A trival server that responds to the following:
 
 * localhost:8080
