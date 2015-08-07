@@ -12,3 +12,7 @@ A trival server that responds to the following:
 
 * localhost:8080
 * localhost:8080/trends/{location}/{term}
+
+### Setting up Postgres database
+    createuser --createdb --login -P tfw
+    createdb tfw

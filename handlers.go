@@ -21,6 +21,32 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
 
   log.Printf("%s:%s", location, term)
 
+  trends := Trends {}
+
+  rows := QueryTerms(term)
+    fmt.Println("uid | postid | term ")
+    for rows.Next() {
+        var uid int
+        var postid int
+        var term string
+        err := rows.Scan(&uid, &postid, &term)
+        checkErr(err)
+        postRows := QueryPosts(fmt.Sprintf(" WHERE uid=%d", postid))
+        for postRows.Next() {
+          var mined time.Time
+          var posted time.Time
+          var sourceURI string
+          err = postRows.Scan(&uid, &mined, &posted, &sourceURI)
+          checkErr(err)
+          trend := Trend{
+            Term: term,
+            SourceURI: sourceURI,
+            Mined: mined,
+          }
+          trends = append(trends, trend)
+        }
+    }
+/*
   const jsonForm = "2015-08-04T10:20:30Z"
   time1, _ := time.Parse(jsonForm, "2015-08-04T14:34:00Z")
   time2, _ := time.Parse(jsonForm, "2015-08-06T03:23:00Z")
@@ -45,6 +71,7 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
       }  },
     Trend{Term: "smartphone" },
   }
+  */
 
   json.NewEncoder(w).Encode(trends)
 }
