@@ -3,6 +3,8 @@ package main
 import (
     "database/sql"
     "fmt"
+    "strings"
+    "regexp"
     _ "github.com/lib/pq"
     "time"
     "bytes"
@@ -29,7 +31,7 @@ var datetime = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 // Post: uid serial mined:datetime posted:datetime sourceURI: string
 var CREATE = map[int]string{
     Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text)",
-    Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text)",
+    Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer)",
 }
 
 var DROP = map[int]string{
@@ -45,12 +47,44 @@ func BuildDatabase() {
     CreateTable(CREATE[Terms])
 
     // Seed with some sample data
-    lastInsertId := InsertPost("http://someblog.com")
-    InsertTerm("GIS", lastInsertId)
-    InsertTerm("earthquake", lastInsertId)
-    lastInsertId = InsertPost("http://example.com")
-    InsertTerm("GIS", lastInsertId)
-    InsertTerm("water", lastInsertId)
+    AddTweet("https://twitter.com/assaadrazzouk/status/629956498349756416",
+        "AssaadRazzouk: New York Ski Resorts Turn to #Solar Power. Because It's Cheaper and Cleaner. http://t.co/eYEXmdD6ql #climate #nyc http://t.co/myVa1yi15s")
+
+    AddTweet("https://twitter.com/oldpicsarchive/status/630020696589139968",
+        "oldpicsarchive: 1910s: etiquette warnings shown before silent movies http://t.co/rQsLenicva")
+
+    AddTweet("https://twitter.com/news24hbgd/status/630041104453210112",
+        "news24hbgd: Tech talk on solar PV electricity: The Department of Electrical and Electronic Engineering (EEE) of Daffodil I... http://t.co/FLU5PdThuq")
+
+    AddTweet("https://twitter.com/psfk/status/630033528495960064",
+        "PSFK: Solar-powered coffee, toast, waffles--or whatever else you can plug into an outlet http://t.co/LjediOVYno http://t.co/qBppQn2FbP")
+
+    AddTweet("https://twitter.com/tilapya_/status/630043313245065216",
+        "tilapya_: Confused about the kind of plug China uses. Sometimes it’s the U.S. plug (but always at 220V), sometimes it’s the Australian or UK type. :|")
+}
+
+func AddTweet(address string, contents string) {
+    lastInsertId := InsertPost(address)
+
+    reg, err := regexp.Compile("[^A-Za-z ]+")
+    if err != nil {
+        fmt.Println("%s", err)
+    }
+    cleanedContent := reg.ReplaceAllString(strings.ToLower(string(contents)), "")
+    wordCounts := CountWords(cleanedContent)
+    for k, v := range wordCounts {
+      InsertTerm(k, v, lastInsertId)
+    }
+}
+
+
+func CountWords(s string) map[string]int {
+  counts := make(map[string]int)
+  fields := strings.Fields(s)
+  for i := 0; i < len(fields); i++ {
+    counts[fields[i]]++
+  }
+  return counts
 }
 
 func ConnectToDatabase() *sql.DB {
@@ -80,7 +114,6 @@ func DropTable(sql string) {
 
 
 func UpdatePost() {
-    fmt.Println("# Updating")
     //db := ConnectToDatabase()
     /*
     stmt, err := db.Prepare("update userinfo set username=$1 where uid=$2")
@@ -96,18 +129,13 @@ func UpdatePost() {
     */
 }
 
-func InsertTerm(term string, postid int) {
-    fmt.Println("# Inserting term")
-
-    db := ConnectToDatabase()
+func InsertTerm(term string, wordcount int, postid int) {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO terms (postid, term) VALUES($1,$2) returning uid;", postid, term).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount) VALUES($1,$2,$3) returning uid;", postid, term, wordcount).Scan(&lastInsertId)
     checkErr(err)
 }
 
 func InsertPost(sourceURI string) int {
-    fmt.Println("# Inserting values")
-    db := ConnectToDatabase()
     var lastInsertId int
     err := db.QueryRow("INSERT INTO posts (mined, posted, sourceURI) VALUES($1,$2,$3) returning uid;", datetime.Format(time.RFC3339), datetime.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
     checkErr(err)
@@ -116,24 +144,26 @@ func InsertPost(sourceURI string) int {
 }
 
 func QueryTerms(term string) *sql.Rows {
-    fmt.Println("# Querying")
-    db := ConnectToDatabase()
-    rows, err := db.Query("SELECT * FROM terms WHERE LOWER(term) LIKE '%' || LOWER($1) || '%'", term)
+    rows, err := db.Query("SELECT * FROM terms WHERE LOWER(term) LIKE '%' || LOWER($1) || '%' ORDER BY term", term)
+    checkErr(err)
+
+    return rows
+}
+
+func QueryTermsForPost(postid int) *sql.Rows {
+    rows, err := db.Query("SELECT * FROM terms WHERE postid=$1", postid)
     checkErr(err)
 
     return rows
 }
 
 func QueryPosts(args ...string) *sql.Rows {
-    fmt.Println("# Querying ", args)
-    db := ConnectToDatabase()
     query := "SELECT * FROM posts"
     var buffer = bytes.NewBufferString(query)
     for _, v := range args {
         buffer.WriteString(fmt.Sprint(v, " "))
     }
     query = buffer.String()
-    fmt.Println(query)
     rows, err := db.Query(query)
     checkErr(err)
 
@@ -141,8 +171,6 @@ func QueryPosts(args ...string) *sql.Rows {
 }
 
 func QueryAll() {
-    fmt.Println("# Querying")
-    db := ConnectToDatabase()
     rows, err := db.Query("select Posts.*, Terms.term from posts inner join terms on terms.postid=posts.uid")
     checkErr(err)
 
@@ -160,7 +188,6 @@ func QueryAll() {
 }
 
 func DeletePost(db *sql.DB, uid int) {
-    fmt.Println("# Deleting")
     stmt, err := db.Prepare("delete from posts where uid=$1")
     checkErr(err)
 

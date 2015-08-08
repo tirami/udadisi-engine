@@ -3,6 +3,7 @@ package main
 import "time"
 
 type WordCount struct {
+  Term string `json:"term"`
   Source string `json:"source"`
   Occurrences  int `json:"occurrences"`
 }

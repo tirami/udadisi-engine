@@ -42,4 +42,22 @@ var routes = Routes{
         "/trends/{location}/{term}",
         TrendsIndex,
     },
+    Route{
+        "TrendsRouteIndex",
+        "GET",
+        "/trends/{location}",
+        TrendsRouteIndex,
+    },
+    Route{
+        "WebTrendsIndex",
+        "GET",
+        "/web/trends/{location}",
+        WebTrendsRouteIndex,
+    },
+    Route{
+        "WebTrendsIndex",
+        "GET",
+        "/web/trends/{location}/{term}",
+        WebTrendsIndex,
+    },
 }
