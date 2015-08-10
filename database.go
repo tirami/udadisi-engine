@@ -35,8 +35,8 @@ var CREATE = map[int]string{
 }
 
 var DROP = map[int]string{
-    Posts: "DROP TABLE posts",
-    Terms: "DROP TABLE terms",
+    Posts: "DROP TABLE IF EXISTS posts",
+    Terms: "DROP TABLE IF EXISTS terms",
 }
 
 func BuildDatabase() {
