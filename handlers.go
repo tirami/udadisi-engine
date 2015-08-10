@@ -11,7 +11,8 @@ import (
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprintf(w, "Welcome to the TFW application server")
+  fmt.Fprintf(w, "<h1>Welcome to the TFW application server</h1>")
+  fmt.Fprintf(w, "View <a href=\"web/trends/samplelocation\">basic</a> sample data viewer")
 }
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +48,8 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
 
   trends := TrendsCollection(term)
 
+  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
+
   fmt.Fprintf(w, "<h1>Main index</h1>")
   for _, trend := range trends {
     fmt.Fprintf(w, "<h2>%s</h2>", trend.Term)
@@ -64,6 +67,8 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   log.Printf("%s:%s", location, term)
 
   trends := TrendsCollection(term)
+
+  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
 
   fmt.Fprintf(w, "<h1><a href=\"../%s\">Main index</a></h1>", location)
   for _, trend := range trends {
