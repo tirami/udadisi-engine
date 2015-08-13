@@ -8,12 +8,13 @@ import (
     _ "github.com/lib/pq"
     "time"
     "bytes"
+    "os"
 )
 
 const (
-    DB_USER     = "tfw"
-    DB_PASSWORD = "tfw"
-    DB_NAME     = "tfw"
+    DB_USER     = "udadisi"
+    DB_PASSWORD = "udadisi"
+    DB_NAME     = "udadisi"
 )
 
 const (
@@ -88,8 +89,13 @@ func CountWords(s string) map[string]int {
 }
 
 func ConnectToDatabase() *sql.DB {
-    dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable",
-        DB_USER, DB_PASSWORD, DB_NAME)
+    host := os.Getenv("POSTGRES_DB")
+    if host == "" {
+        host = "localhost"
+    }
+
+    dbinfo := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
+        host, DB_USER, DB_PASSWORD, DB_NAME)
     db, err := sql.Open("postgres", dbinfo)
     checkErr(err)
 
@@ -105,7 +111,7 @@ func CreateTable(sql string) {
 }
 
 func DropTable(sql string) {
-    fmt.Println("# Dropping table" + sql)
+    fmt.Println("# Dropping table " + sql)
     db := ConnectToDatabase()
     if _, err := db.Exec(sql); err != nil {
         checkErr(err)

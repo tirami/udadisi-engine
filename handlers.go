@@ -11,7 +11,7 @@ import (
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprintf(w, "<h1>Welcome to the TFW application server</h1>")
+  fmt.Fprintf(w, "<h1>Welcome to the Udadisi Engine</h1>")
   fmt.Fprintf(w, "View <a href=\"web/trends/samplelocation\">basic</a> sample data viewer")
 }
 
