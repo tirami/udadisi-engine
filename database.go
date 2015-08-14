@@ -94,8 +94,13 @@ func ConnectToDatabase() *sql.DB {
         host = "localhost"
     }
 
+    password := os.Getenv("DB_PASSWORD")
+    if password == "" {
+        password = DB_PASSWORD
+    }
+
     dbinfo := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
-        host, DB_USER, DB_PASSWORD, DB_NAME)
+        host, DB_USER, password, DB_NAME)
     db, err := sql.Open("postgres", dbinfo)
     checkErr(err)
 

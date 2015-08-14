@@ -20,6 +20,7 @@ A trival server that responds to the following:
 The server uses the following environment variables:
 
 * POSTGRES_DB - database host address
+* DB_PASSWORD - db user password
 
 ### Sample Data
 Currently the data is populated with 5 tweets that I randomly selected. Some of them have related terms.
@@ -35,4 +36,4 @@ Set password to udadisi
     docker build -t udadis_postgresql .
 
 ### Running Docker
-    docker run --rm -p 8080:8080 -e POSTGRES_DB='<database host address>' -P --name pg_test udadis_postgresql
+    docker run --rm -p 8080:8080 -e POSTGRES_DB='<database host address>' -e DB_PASSWORD='<password>' -P --name pg_test udadis_postgresql
