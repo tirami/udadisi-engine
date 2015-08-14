@@ -43,45 +43,102 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
 func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
-  term := ""
-  log.Printf("%s:%s", location, term)
-
-  trends := TrendsCollection(term)
+  wordCounts := WordCountRootCollection()
 
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
-
   fmt.Fprintf(w, "<h1>Main index</h1>")
-  for _, trend := range trends {
-    fmt.Fprintf(w, "<h2>%s</h2>", trend.Term)
-    fmt.Fprintf(w, "<h3><a href=\"%s\" target=\"_new\">%s</a></h3>", trend.SourceURI, trend.SourceURI)
-    for _, wordCount := range trend.WordCounts {
-      fmt.Fprintf(w, "(<a href=\"%s/%s\">%s</a> : %d), ", location, wordCount.Term, wordCount.Term, wordCount.Occurrences)
-    }
+
+  totalCounts := map[string]int {}
+
+  for _, wordcount := range wordCounts {
+    count := totalCounts[wordcount.Term]
+    count = count + wordcount.Occurrences
+    totalCounts[wordcount.Term] = count    
   }
+
+  DisplayRootCount(w, location, totalCounts)
 }
 
 func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
   term := vars["term"]
-  log.Printf("%s:%s", location, term)
 
   trends := TrendsCollection(term)
 
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
-
   fmt.Fprintf(w, "<h1><a href=\"../%s\">Main index</a></h1>", location)
+
+  last_trend_term := ""
+  totalCounts := map[string]int {}
+  thisTerm := ""
+  sources := []string {}
   for _, trend := range trends {
-    fmt.Fprintf(w, "<h2>%s</h2>", trend.Term)
-    fmt.Fprintf(w, "<h3><a href=\"%s\" target=\"_new\">%s</a></h3>", trend.SourceURI, trend.SourceURI)
-    for _, wordCount := range trend.WordCounts {
-      fmt.Fprintf(w, "(<a href=\"%s\">%s</a> : %d), ", wordCount.Term, wordCount.Term, wordCount.Occurrences)
+    if trend.Term != last_trend_term {
+
+      if thisTerm != "" {
+        DisplayCount(w, thisTerm, totalCounts, sources)
+      }
+
+      last_trend_term = trend.Term
+      totalCounts = map[string]int {}
+      sources = []string {}
+      thisTerm = trend.Term
     }
+    sources = append(sources, trend.SourceURI)
+
+    for _, wordcount := range trend.WordCounts {
+      count := totalCounts[wordcount.Term]
+      count = count + wordcount.Occurrences
+      totalCounts[wordcount.Term] = count    
+    }      
+  }
+
+  DisplayCount(w, thisTerm, totalCounts, sources)
+}
+
+func DisplayRootCount(w http.ResponseWriter, location string, totalCounts map[string]int) {
+  for _, res := range sortedKeys(totalCounts) {
+    fmt.Fprintf(w, "<li><a href=\"%s/%s\">%s</a> : %d</li>", location, res, res, totalCounts[res])
+  }
+}
+
+func DisplayCount(w http.ResponseWriter, term string, totalCounts map[string]int, sources []string) {
+  fmt.Fprintf(w, "<h2>%s (%d)</h2>", term, totalCounts[term])
+
+  for _, res := range sortedKeys(totalCounts) {
+    fmt.Fprintf(w, "<li><a href=\"%s\">%s</a> : %d</li>", res, res, totalCounts[res])
+  }
+        
+  fmt.Fprintf(w, "<h3>Sources</h3>")
+  for _, source := range sources {
+    fmt.Fprintf(w, "<li><a href=\"%s\" target=\"_new\">%s</a></li>", source, source)
   }
 }
 
 
 // Internal stuff
+func WordCountRootCollection() WordCounts {
+  wordCounts := WordCounts {}
+
+  rows := QueryTerms("")
+    for rows.Next() {
+        var uid int
+        var postid int
+        var term string
+        var wordcount int
+        err := rows.Scan(&uid, &postid, &term, &wordcount)
+        checkErr(err)
+        wordCount := WordCount {
+          Term: term,
+          Occurrences: wordcount,
+        }
+        wordCounts = append(wordCounts, wordCount)
+    }
+
+    return wordCounts
+}
+
 func TrendsCollection(term string) Trends {
   trends := Trends {}
 

@@ -59,17 +59,12 @@ func BuildDatabase() {
     // Seed with some sample data
     anaconda.SetConsumerKey(TWITTER_CONSUMER_KEY)
     anaconda.SetConsumerSecret(TWITTER_CONSUMER_SECRET)
-    api := anaconda.NewTwitterApi(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
-    fmt.Println(*api.Credentials)
 
-    v := url.Values{}
-    v.Set("screen_name", "symboticaandrew")
-    //v.Set("count", "2")
-    timeline, _ := api.GetUserTimeline(v)
-    for _ , tweet := range timeline {
-        tweetUrl := fmt.Sprintf("https://twitter.com/symboticaandrew/status/%s", tweet.IdStr)
-        AddTweet(tweetUrl, tweet.Text)
-    }
+    PopulateWithTweets("symboticaandrew")
+    PopulateWithTweets("digitalwestie")
+    PopulateWithTweets("mashable")
+    PopulateWithTweets("pluginadventure")
+    PopulateWithTweets("kickstarter")
     
     /*
     searchResult, _ := api.GetSearch("solar", nil)
@@ -79,10 +74,23 @@ func BuildDatabase() {
     */
 }
 
+func PopulateWithTweets(user string) {
+    api := anaconda.NewTwitterApi(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
+
+    v := url.Values{}
+    v.Set("screen_name", user)
+    v.Set("count", "200")
+    timeline, _ := api.GetUserTimeline(v)
+    for _ , tweet := range timeline {
+        tweetUrl := fmt.Sprintf("https://twitter.com/%s/status/%s", user, tweet.IdStr)
+        AddTweet(tweetUrl, tweet.Text)
+    }
+}
+
 func AddTweet(address string, contents string) {
     lastInsertId := InsertPost(address)
 
-    reg, err := regexp.Compile("[^A-Za-z ]+")
+    reg, err := regexp.Compile("[^A-Za-z @]+")
     if err != nil {
         fmt.Println("%s", err)
     }
