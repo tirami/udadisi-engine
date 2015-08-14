@@ -9,6 +9,8 @@ import (
     "time"
     "bytes"
     "os"
+    "github.com/ChimeraCoder/anaconda"
+    "net/url"
 )
 
 const (
@@ -40,6 +42,13 @@ var DROP = map[int]string{
     Terms: "DROP TABLE IF EXISTS terms",
 }
 
+const (
+    TWITTER_CONSUMER_KEY = "nPHuNmCFnYGAJQgr0fwB571bc"
+    TWITTER_CONSUMER_SECRET = "5Xd8A5WcmP8avrKwlGKsaaLQiHspe87Qiz68AxSWQ83iARieJl"
+    TWITTER_ACCESS_TOKEN = "3417359543-fss1uvyGrPc9k3GpfewWBF7EZaXm8Tw8c8boN6C"
+    TWITTER_ACCESS_TOKEN_SECRET = "zXngb9iZ4rsugWHpgkZHYRtIo2qAQs7dBrsfn0kLiKQJP"
+)
+
 func BuildDatabase() {
 
     DropTable(DROP[Posts])
@@ -48,20 +57,26 @@ func BuildDatabase() {
     CreateTable(CREATE[Terms])
 
     // Seed with some sample data
-    AddTweet("https://twitter.com/assaadrazzouk/status/629956498349756416",
-        "AssaadRazzouk: New York Ski Resorts Turn to #Solar Power. Because It's Cheaper and Cleaner. http://t.co/eYEXmdD6ql #climate #nyc http://t.co/myVa1yi15s")
+    anaconda.SetConsumerKey(TWITTER_CONSUMER_KEY)
+    anaconda.SetConsumerSecret(TWITTER_CONSUMER_SECRET)
+    api := anaconda.NewTwitterApi(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
+    fmt.Println(*api.Credentials)
 
-    AddTweet("https://twitter.com/oldpicsarchive/status/630020696589139968",
-        "oldpicsarchive: 1910s: etiquette warnings shown before silent movies http://t.co/rQsLenicva")
-
-    AddTweet("https://twitter.com/news24hbgd/status/630041104453210112",
-        "news24hbgd: Tech talk on solar PV electricity: The Department of Electrical and Electronic Engineering (EEE) of Daffodil I... http://t.co/FLU5PdThuq")
-
-    AddTweet("https://twitter.com/psfk/status/630033528495960064",
-        "PSFK: Solar-powered coffee, toast, waffles--or whatever else you can plug into an outlet http://t.co/LjediOVYno http://t.co/qBppQn2FbP")
-
-    AddTweet("https://twitter.com/tilapya_/status/630043313245065216",
-        "tilapya_: Confused about the kind of plug China uses. Sometimes it’s the U.S. plug (but always at 220V), sometimes it’s the Australian or UK type. :|")
+    v := url.Values{}
+    v.Set("screen_name", "symboticaandrew")
+    //v.Set("count", "2")
+    timeline, _ := api.GetUserTimeline(v)
+    for _ , tweet := range timeline {
+        tweetUrl := fmt.Sprintf("https://twitter.com/symboticaandrew/status/%s", tweet.IdStr)
+        AddTweet(tweetUrl, tweet.Text)
+    }
+    
+    /*
+    searchResult, _ := api.GetSearch("solar", nil)
+    for _ , tweet := range searchResult.Statuses {
+        fmt.Println(tweet.Text)
+    }
+    */
 }
 
 func AddTweet(address string, contents string) {
