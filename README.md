@@ -1,6 +1,4 @@
-# tfw-application-server
-
-Udadisi Engine
+# Udadisi Engine
 
 ### Server
     go get github.com/tirami/tfw-application-server
