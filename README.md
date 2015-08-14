@@ -1,11 +1,11 @@
 # Udadisi Engine
 
 ### Server
-    go get github.com/tirami/tfw-application-server
+    go get github.com/tirami/udadisi-engine
 
 or if you already have an older version installed
     
-    go get -u github.com/tirami/tfw-application-server
+    go get -u github.com/tirami/udadisi-engine
 
 A trival server that responds to the following:
 
