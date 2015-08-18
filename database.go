@@ -57,6 +57,7 @@ func BuildDatabase() {
     CreateTable(CREATE[Terms])
 
     // Seed with some sample data
+    fmt.Println("# Populating with seed data...")
     anaconda.SetConsumerKey(TWITTER_CONSUMER_KEY)
     anaconda.SetConsumerSecret(TWITTER_CONSUMER_SECRET)
 
@@ -65,7 +66,9 @@ func BuildDatabase() {
     PopulateWithTweets("mashable")
     PopulateWithTweets("pluginadventure")
     PopulateWithTweets("kickstarter")
-    
+
+    fmt.Println("# Populated")
+
     /*
     searchResult, _ := api.GetSearch("solar", nil)
     for _ , tweet := range searchResult.Statuses {

@@ -6,6 +6,7 @@ import (
   "time"
   "encoding/json"
   "log"
+  "os"
 
   "github.com/gorilla/mux"
 )
@@ -13,17 +14,38 @@ import (
 func Index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<h1>Welcome to the Udadisi Engine</h1>")
   fmt.Fprintf(w, "View <a href=\"web/trends/samplelocation\">basic</a> sample data viewer")
+
+  fmt.Fprintf(w, "<h2>JSON Output</h2>")
+  fmt.Fprintf(w, "<p>Looking for JSON output? Use the following:</p>")
+
+  hostname, _ := os.Hostname()
+  fmt.Fprintf(w, "<a href=\"trends/samplelocation\">%s/trends/samplelocation</a>", hostname)
 }
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
-  vars := mux.Vars(r)
-  location := vars["location"]
-  term := ""
-  log.Printf("%s:%s", location, term)
+  //vars := mux.Vars(r)
+  //location := vars["location"]
+  wordCounts := WordCountRootCollection()
 
-  trends := TrendsCollection(term)
+  totalCounts := map[string]int {}
 
-  json.NewEncoder(w).Encode(trends)
+  for _, wordcount := range wordCounts {
+    count := totalCounts[wordcount.Term]
+    count = count + wordcount.Occurrences
+    totalCounts[wordcount.Term] = count
+  }
+
+  sortedCounts := WordCounts {}
+
+  for _, res := range sortedKeys(totalCounts) {
+    sortedCounts = append(sortedCounts, WordCount {
+              Term: res,
+              Source: "twitter",
+              Occurrences: totalCounts[res],
+            })
+  }
+
+  json.NewEncoder(w).Encode(sortedCounts)
 }
 
 func TrendsIndex(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +75,7 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   for _, wordcount := range wordCounts {
     count := totalCounts[wordcount.Term]
     count = count + wordcount.Occurrences
-    totalCounts[wordcount.Term] = count    
+    totalCounts[wordcount.Term] = count
   }
 
   DisplayRootCount(w, location, totalCounts)
@@ -90,8 +112,8 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
     for _, wordcount := range trend.WordCounts {
       count := totalCounts[wordcount.Term]
       count = count + wordcount.Occurrences
-      totalCounts[wordcount.Term] = count    
-    }      
+      totalCounts[wordcount.Term] = count
+    }
   }
 
   DisplayCount(w, thisTerm, totalCounts, sources)
@@ -109,7 +131,7 @@ func DisplayCount(w http.ResponseWriter, term string, totalCounts map[string]int
   for _, res := range sortedKeys(totalCounts) {
     fmt.Fprintf(w, "<li><a href=\"%s\">%s</a> : %d</li>", res, res, totalCounts[res])
   }
-        
+
   fmt.Fprintf(w, "<h3>Sources</h3>")
   for _, source := range sources {
     fmt.Fprintf(w, "<li><a href=\"%s\" target=\"_new\">%s</a></li>", source, source)
