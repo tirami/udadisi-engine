@@ -1,0 +1,130 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "0.0.1",
+        "title": "Udadisi"
+    },
+    "paths": {
+        "/trends/{location}": {
+            "get": {
+                "description": "Gets `WordCount` objects.\nOptional query param of **limit** determins\nmaximum number of word counts returned\n",
+                "parameters": [
+                    {
+                        "name": "location",
+                        "in": "path",
+                        "description": "name of location that the results should be from",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "maximum number of word counts to return",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "title": "ArrayOfWordCounts",
+                            "type": "array",
+                            "items": {
+                                "title": "WordCount",
+                                "type": "object",
+                                "properties": {
+                                    "term": {
+                                        "type": "string"
+                                    },
+                                    "occurances": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/trends/{location}/{term}": {
+            "get": {
+                "description": "Gets `Trend` objects.\nOptional query param of **velocity** determines\nminimum velocity of trends returned\n",
+                "parameters": [
+                    {
+                        "name": "term",
+                        "in": "path",
+                        "description": "term to be included in the results",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "location",
+                        "in": "path",
+                        "description": "name of location that the results should be from",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "velocity",
+                        "in": "query",
+                        "description": "minimum velocity of trends",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "date and time posts are from",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "interval",
+                        "in": "query",
+                        "description": "time interval to include post from from date",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "title": "ArrayOfTrends",
+                            "type": "array",
+                            "items": {
+                                "title": "Trend",
+                                "type": "object",
+                                "properties": {
+                                    "term": {
+                                        "type": "string"
+                                    },
+                                    "counts": {
+                                        "type": "array",
+                                        "items": {
+                                            "title": "count",
+                                            "type": "object",
+                                            "properties": {
+                                                "count": {
+                                                    "type": "integer"
+                                                },
+                                                "source": {
+                                                    "type": "string",
+                                                    "description": "Source of the counts, i.e. Twitter, blogs, journals"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

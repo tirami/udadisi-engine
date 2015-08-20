@@ -6,13 +6,30 @@ import (
   "time"
   "encoding/json"
   "strconv"
+  "io/ioutil"
+  "os"
 
   "github.com/gorilla/mux"
 )
 
+
+func APIDocs(w http.ResponseWriter, r *http.Request) {
+  file, e := ioutil.ReadFile("./swagger.json")
+    if e != nil {
+        fmt.Printf("File error: %v\n", e)
+        os.Exit(1)
+    }
+
+  s := string(file)
+  fmt.Fprintf(w, s)
+}
+
 func Index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<h1>Welcome to the Udadisi Engine</h1>")
   fmt.Fprintf(w, "View <a href=\"web/trends/samplelocation\">basic</a> sample data viewer")
+
+  fmt.Fprintf(w, "<h2>API Docs</h2>")
+  fmt.Fprintf(w, "<a href=\"apidocs\">{hostname}/apidocs</a>")
 
   fmt.Fprintf(w, "<h2>JSON Output</h2>")
   fmt.Fprintf(w, "<p>Looking for JSON output? Use the following:</p>")
