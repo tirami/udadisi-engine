@@ -73,6 +73,9 @@ func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
     }
   }
 
+  w.Header().Add("Access-Control-Allow-Origin", "*")
+  w.Header().Add("Access-Control-Allow-Methods", "GET")
+  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
   json.NewEncoder(w).Encode(sortedCounts)
 }
 
@@ -114,6 +117,9 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources)
   termTrends = append(termTrends, termTrend)
 
+  w.Header().Add("Access-Control-Allow-Origin", "*")
+  w.Header().Add("Access-Control-Allow-Methods", "GET")
+  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
   json.NewEncoder(w).Encode(termTrends)
 }
 

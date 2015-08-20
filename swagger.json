@@ -7,7 +7,7 @@
     "paths": {
         "/trends/{location}": {
             "get": {
-                "description": "Gets `WordCount` objects.\nOptional query param of **limit** determins\nmaximum number of word counts returned\n",
+                "description": "Gets `WordCount` objects.\nOptional query param of **limit** determins top number of word counts returned\n",
                 "parameters": [
                     {
                         "name": "location",
@@ -20,7 +20,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "maximum number of word counts to return",
+                        "description": "top number of word counts to return",
                         "required": false,
                         "type": "integer"
                     }
