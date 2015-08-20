@@ -22,6 +22,8 @@ func APIDocs(w http.ResponseWriter, r *http.Request) {
 
   s := string(file)
 
+  w.Header().Add("Access-Control-Allow-Origin", "*")
+  w.Header().Add("Access-Control-Allow-Methods", "GET")
   w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
   fmt.Fprintf(w, s)
 }
