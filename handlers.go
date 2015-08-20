@@ -13,7 +13,7 @@ import (
 )
 
 
-func APIDocs(w http.ResponseWriter, r *http.Request) {
+func Swagger(w http.ResponseWriter, r *http.Request) {
   file, e := ioutil.ReadFile("./swagger.json")
     if e != nil {
         fmt.Printf("File error: %v\n", e)
@@ -35,15 +35,15 @@ func Index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "View <a href=\"web/trends/samplelocation\">basic</a> sample data viewer")
 
   fmt.Fprintf(w, "<h2>API Docs</h2>")
-  fmt.Fprintf(w, "<a href=\"apidocs\">{hostname}/apidocs</a>")
+  fmt.Fprintf(w, "<a href=\"v1/swagger.json\">{hostname}/v1/swagger.json</a>")
 
   fmt.Fprintf(w, "<h2>JSON Output</h2>")
   fmt.Fprintf(w, "<p>Looking for JSON output? Use the following:</p>")
   fmt.Fprintf(w, "<ul>")
-  fmt.Fprintf(w, "<li><a href=\"trends/samplelocation\">{hostname}/trends/samplelocation</a></li>")
-  fmt.Fprintf(w, "<li><a href=\"trends/samplelocation?limit=10\">{hostname}/trends/samplelocation?limit=10</a> for top 10 results</li>")
+  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation\">{hostname}/v1/trends/samplelocation</a></li>")
+  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation?limit=10\">{hostname}/v1/trends/samplelocation?limit=10</a> for top 10 results</li>")
 
-  fmt.Fprintf(w, "<li><a href=\"trends/samplelocation/code\">{hostname}/trends/samplelocation/code</a></li>")
+  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation/code\">{hostname}/v1/trends/samplelocation/code</a></li>")
   fmt.Fprintf(w, "</ul>")
 }
 

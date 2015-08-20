@@ -31,10 +31,10 @@ func NewRouter() *mux.Router {
 
 var routes = Routes{
     Route{
-        "APIDocs",
+        "Swagger",
         "GET",
-        "/apidocs",
-        APIDocs,
+        "/v1/swagger.json",
+        Swagger,
     },
     Route{
         "Index",
@@ -45,13 +45,13 @@ var routes = Routes{
     Route{
         "TrendsIndex",
         "GET",
-        "/trends/{location}/{term}",
+        "/v1/trends/{location}/{term}",
         TrendsIndex,
     },
     Route{
         "TrendsRouteIndex",
         "GET",
-        "/trends/{location}",
+        "/v1/trends/{location}",
         TrendsRouteIndex,
     },
     Route{

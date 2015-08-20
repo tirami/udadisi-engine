@@ -5,7 +5,7 @@
         "title": "Udadisi"
     },
     "paths": {
-        "/trends/{location}": {
+        "/v1/trends/{location}": {
             "get": {
                 "description": "Gets `WordCount` objects.\nOptional query param of **limit** determins top number of word counts returned\n",
                 "parameters": [
@@ -48,7 +48,7 @@
                 }
             }
         },
-        "/trends/{location}/{term}": {
+        "/v1/trends/{location}/{term}": {
             "get": {
                 "description": "Gets `Trend` objects.\nOptional query param of **velocity** determines\nminimum velocity of trends returned\n",
                 "parameters": [

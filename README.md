@@ -10,11 +10,15 @@ or if you already have an older version installed
 A trival server that responds to the following:
 
 * localhost:8080 - returns HTML
-* localhost:8080/trends/{location}?limit={limit} - returns top {limit} trends as JSON
-* localhost:8080/trends/{location}/{term} - returns JSON
+* localhost:8080/v1/trends/{location}?limit={limit} - returns top {limit} trends as JSON
+* localhost:8080/v1/trends/{location}/{term} - returns JSON
 * localhost:8080/web/trends/{location} - returns HTML list of terms, source URI, word counts
 * localhost:8080/web/trends/{location}/{term} - returns HTML list of for term, source URIs and word counts
 * localhost:8080 - returns simple home page
+
+API spec in Swagger:
+
+* localhost:8080/v1/swagger.json
 
 ### Environment variables
 The server uses the following environment variables:
