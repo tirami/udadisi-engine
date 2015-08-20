@@ -21,10 +21,14 @@ func APIDocs(w http.ResponseWriter, r *http.Request) {
     }
 
   s := string(file)
+
+  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
   fmt.Fprintf(w, s)
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
+  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
+
   fmt.Fprintf(w, "<h1>Welcome to the Udadisi Engine</h1>")
   fmt.Fprintf(w, "View <a href=\"web/trends/samplelocation\">basic</a> sample data viewer")
 
