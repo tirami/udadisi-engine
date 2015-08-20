@@ -6,7 +6,7 @@ import (
   "time"
   "encoding/json"
   "log"
-  "os"
+  "strconv"
 
   "github.com/gorilla/mux"
 )
@@ -18,13 +18,15 @@ func Index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<h2>JSON Output</h2>")
   fmt.Fprintf(w, "<p>Looking for JSON output? Use the following:</p>")
 
-  hostname, _ := os.Hostname()
-  fmt.Fprintf(w, "<a href=\"trends/samplelocation\">%s/trends/samplelocation</a>", hostname)
+  fmt.Fprintf(w, "<a href=\"trends/samplelocation\">{hostname}/trends/samplelocation</a><br/>")
+  fmt.Fprintf(w, "<a href=\"trends/samplelocation?limit=10\">{hostname}/trends/samplelocation?limit=10</a> for top 10 results")
 }
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   //vars := mux.Vars(r)
   //location := vars["location"]
+  limitParam := r.URL.Query().Get("limit")
+  limit, _ := strconv.ParseInt(limitParam, 10, 0)
   wordCounts := WordCountRootCollection()
 
   totalCounts := map[string]int {}
@@ -38,11 +40,13 @@ func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   sortedCounts := WordCounts {}
 
   for _, res := range sortedKeys(totalCounts) {
-    sortedCounts = append(sortedCounts, WordCount {
-              Term: res,
-              Source: "twitter",
-              Occurrences: totalCounts[res],
-            })
+    if limit == 0 || len(sortedCounts) < int(limit) {
+      sortedCounts = append(sortedCounts, WordCount {
+                Term: res,
+                Source: "twitter",
+                Occurrences: totalCounts[res],
+              })
+    }
   }
 
   json.NewEncoder(w).Encode(sortedCounts)

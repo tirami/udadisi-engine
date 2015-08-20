@@ -11,7 +11,7 @@ var db *sql.DB = ConnectToDatabase()
 func main() {
 
   router := NewRouter()
-  BuildDatabase()
+  //BuildDatabase()
   defer db.Close()
 
   log.Fatal(http.ListenAndServe(":8080", router))
