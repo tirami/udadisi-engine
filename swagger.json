@@ -103,18 +103,35 @@
                                     "term": {
                                         "type": "string"
                                     },
-                                    "counts": {
+                                    "word_counts": {
                                         "type": "array",
                                         "items": {
-                                            "title": "count",
+                                            "title": "WordCount",
                                             "type": "object",
                                             "properties": {
-                                                "count": {
+                                                "occurances": {
                                                     "type": "integer"
                                                 },
+                                                "term": {
+                                                    "type": "string",
+                                                    "description": "Term that the count is for"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "sources": {
+                                        "type": "array",
+                                        "items": {
+                                            "title": "Source",
+                                            "type": "object",
+                                            "properties": {
                                                 "source": {
                                                     "type": "string",
-                                                    "description": "Source of the counts, i.e. Twitter, blogs, journals"
+                                                    "description": "The type of source, e.g. Twitter, Blog, Journal"
+                                                },
+                                                "source_uri": {
+                                                    "type": "string",
+                                                    "description": "URI of the source, e.g. Tweet URL"
                                                 }
                                             }
                                         }
