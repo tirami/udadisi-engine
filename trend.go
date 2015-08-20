@@ -4,7 +4,6 @@ import "time"
 
 type WordCount struct {
   Term string `json:"term"`
-  Source string `json:"source"`
   Occurrences  int `json:"occurrences"`
 }
 
@@ -18,3 +17,18 @@ type Trend struct {
 }
 
 type Trends []Trend
+
+type Source struct {
+  Source string `json:"source"`
+  SourceURI string `json:"source_uri"`
+}
+
+type Sources []Source
+
+type TermTrend struct {
+  Term string `json:"term"`
+  WordCounts []WordCount `json:"word_counts"`
+  Sources []Source `json:"sources"`
+}
+
+type TermTrends []TermTrend

@@ -23,7 +23,7 @@ The server uses the following environment variables:
 * DB_PASSWORD - db user password
 
 ### Sample Data
-Currently the data is populated with 5 tweets that I randomly selected. Some of them have related terms.
+Currently the data is populated with 200 tweets from 5 Twitter accounts that I randomly selected. Some of them have related terms.
 
 ### Setting up Postgres database
     createuser --createdb --login -P udadisi

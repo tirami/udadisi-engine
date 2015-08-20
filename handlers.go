@@ -5,7 +5,6 @@ import (
   "net/http"
   "time"
   "encoding/json"
-  "log"
   "strconv"
 
   "github.com/gorilla/mux"
@@ -17,9 +16,12 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
   fmt.Fprintf(w, "<h2>JSON Output</h2>")
   fmt.Fprintf(w, "<p>Looking for JSON output? Use the following:</p>")
+  fmt.Fprintf(w, "<ul>")
+  fmt.Fprintf(w, "<li><a href=\"trends/samplelocation\">{hostname}/trends/samplelocation</a></li>")
+  fmt.Fprintf(w, "<li><a href=\"trends/samplelocation?limit=10\">{hostname}/trends/samplelocation?limit=10</a> for top 10 results</li>")
 
-  fmt.Fprintf(w, "<a href=\"trends/samplelocation\">{hostname}/trends/samplelocation</a><br/>")
-  fmt.Fprintf(w, "<a href=\"trends/samplelocation?limit=10\">{hostname}/trends/samplelocation?limit=10</a> for top 10 results")
+  fmt.Fprintf(w, "<li><a href=\"trends/samplelocation/code\">{hostname}/trends/samplelocation/code</a></li>")
+  fmt.Fprintf(w, "</ul>")
 }
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +45,6 @@ func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
     if limit == 0 || len(sortedCounts) < int(limit) {
       sortedCounts = append(sortedCounts, WordCount {
                 Term: res,
-                Source: "twitter",
                 Occurrences: totalCounts[res],
               })
     }
@@ -54,14 +55,43 @@ func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
 
 func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
-  location := vars["location"]
+  //location := vars["location"]
   term := vars["term"]
 
-  log.Printf("%s:%s", location, term)
-
+  termTrends := TermTrends {}
   trends := TrendsCollection(term)
 
-  json.NewEncoder(w).Encode(trends)
+  last_trend_term := ""
+  totalCounts := map[string]int {}
+  thisTerm := ""
+  sources := []string {}
+  for _, trend := range trends {
+    if trend.Term != last_trend_term {
+
+      if thisTerm != "" {
+        termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources)
+        termTrends = append(termTrends, termTrend)
+      }
+
+
+      last_trend_term = trend.Term
+      totalCounts = map[string]int {}
+      sources = []string {}
+      thisTerm = trend.Term
+    }
+    sources = append(sources, trend.SourceURI)
+
+    for _, wordcount := range trend.WordCounts {
+      count := totalCounts[wordcount.Term]
+      count = count + wordcount.Occurrences
+      totalCounts[wordcount.Term] = count
+    }
+  }
+
+  termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources)
+  termTrends = append(termTrends, termTrend)
+
+  json.NewEncoder(w).Encode(termTrends)
 }
 
 
@@ -127,6 +157,34 @@ func DisplayRootCount(w http.ResponseWriter, location string, totalCounts map[st
   for _, res := range sortedKeys(totalCounts) {
     fmt.Fprintf(w, "<li><a href=\"%s/%s\">%s</a> : %d</li>", location, res, res, totalCounts[res])
   }
+}
+
+func BuildTrendsJSON(term string, totalCounts map[string]int, sources []string) TermTrend {
+  termTrend := TermTrend {}
+
+  termTrend.Term = term
+
+  termWordCounts := WordCounts {}
+  for _, res := range sortedKeys(totalCounts) {
+    termWordCount := WordCount {
+      Term: res,
+      Occurrences: totalCounts[res],
+    }
+    termWordCounts = append(termWordCounts, termWordCount)
+  }
+  termTrend.WordCounts = termWordCounts
+
+  termSources := Sources {}
+  for _, source := range sources {
+    termSource := Source {
+      Source: "Twitter",
+      SourceURI: source,
+    }
+    termSources = append(termSources, termSource)
+  }
+  termTrend.Sources = termSources
+
+  return termTrend
 }
 
 func DisplayCount(w http.ResponseWriter, term string, totalCounts map[string]int, sources []string) {
@@ -195,7 +253,6 @@ func TrendsCollection(term string) Trends {
             checkErr(err)
             wordCount := WordCount {
               Term: wcTerm,
-              Source: "twitter",
               Occurrences: wordcount,
             }
             wordCounts = append(wordCounts, wordCount)
