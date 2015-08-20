@@ -35,7 +35,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "View <a href=\"web/trends/samplelocation\">basic</a> sample data viewer")
 
   fmt.Fprintf(w, "<h2>API Docs</h2>")
-  fmt.Fprintf(w, "<a href=\"v1/swagger.json\">{hostname}/v1/swagger.json</a>")
+  fmt.Fprintf(w, "<a href=\"http://developer.udadisi.com\">http://developer.udadisi.com</a>")
 
   fmt.Fprintf(w, "<h2>JSON Output</h2>")
   fmt.Fprintf(w, "<p>Looking for JSON output? Use the following:</p>")
