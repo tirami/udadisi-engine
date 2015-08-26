@@ -32,7 +32,14 @@ func Index(w http.ResponseWriter, r *http.Request) {
   w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
 
   fmt.Fprintf(w, "<h1>Welcome to the Udadisi Engine</h1>")
-  fmt.Fprintf(w, "View <a href=\"web/trends/samplelocation\">basic</a> sample data viewer")
+
+
+  fmt.Fprintf(w, "<h2>Sample data viewer</h2>")
+  fmt.Fprintf(w, "<ul>")
+  fmt.Fprintf(w, "<li><a href=\"web/trends/samplelocation\">All words</a></li>")
+  fmt.Fprintf(w, "<li><a href=\"web/trends/samplelocation?limit=10\">Top 10 words</a></li>")
+  fmt.Fprintf(w, "<li><a href=\"web/trends/samplelocation?from=20150826\">All words posted from 26th August 2015</a></li>")
+  fmt.Fprintf(w, "</ul>")
 
   fmt.Fprintf(w, "<h2>API Docs</h2>")
   fmt.Fprintf(w, "<a href=\"http://developer.udadisi.com\">http://developer.udadisi.com</a>")
@@ -42,6 +49,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<ul>")
   fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation\">{hostname}/v1/trends/samplelocation</a></li>")
   fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation?limit=10\">{hostname}/v1/trends/samplelocation?limit=10</a> for top 10 results</li>")
+  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation?from=20150826\">{hostname}/v1/trends/samplelocation?from=20150826</a> for results posted from 26th August 2015</li>")
 
   fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation/code\">{hostname}/v1/trends/samplelocation/code</a></li>")
   fmt.Fprintf(w, "</ul>")
@@ -83,7 +91,8 @@ func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   //location := vars["location"]
   limitParam := r.URL.Query().Get("limit")
   limit, _ := strconv.ParseInt(limitParam, 10, 0)
-  wordCounts := WordCountRootCollection()
+  fromParam := r.URL.Query().Get("from")
+  wordCounts := WordCountRootCollection(fromParam)
 
   totalCounts := map[string]int {}
 
@@ -163,7 +172,10 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
 func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
-  wordCounts := WordCountRootCollection()
+  limitParam := r.URL.Query().Get("limit")
+  limit, _ := strconv.ParseInt(limitParam, 10, 0)
+  fromParam := r.URL.Query().Get("from")
+  wordCounts := WordCountRootCollection(fromParam)
 
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
   fmt.Fprintf(w, "<h1>Main index</h1>")
@@ -176,7 +188,18 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
     totalCounts[wordcount.Term] = count
   }
 
-  DisplayRootCount(w, location, totalCounts)
+  sortedCounts := WordCounts {}
+
+  for _, res := range sortedKeys(totalCounts) {
+    if limit == 0 || len(sortedCounts) < int(limit) {
+      sortedCounts = append(sortedCounts, WordCount {
+                Term: res,
+                Occurrences: totalCounts[res],
+              })
+    }
+  }
+
+  DisplayRootCount(w, location, sortedCounts)
 }
 
 func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
@@ -222,9 +245,9 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   DisplayCount(w, thisTerm, totalCounts, sources)
 }
 
-func DisplayRootCount(w http.ResponseWriter, location string, totalCounts map[string]int) {
-  for _, res := range sortedKeys(totalCounts) {
-    fmt.Fprintf(w, "<li><a href=\"%s/%s\">%s</a> : %d</li>", location, res, res, totalCounts[res])
+func DisplayRootCount(w http.ResponseWriter, location string, totalCounts WordCounts) {
+  for _, res := range totalCounts {
+    fmt.Fprintf(w, "<li><a href=\"%s/%s\">%s</a> : %d</li>", location, res.Term, res.Term, res.Occurrences)
   }
 }
 
@@ -271,16 +294,17 @@ func DisplayCount(w http.ResponseWriter, term string, totalCounts map[string]int
 
 
 // Internal stuff
-func WordCountRootCollection() WordCounts {
+func WordCountRootCollection(fromParam string) WordCounts {
   wordCounts := WordCounts {}
 
-  rows := QueryTerms("")
+  rows := QueryTerms("", fromParam)
     for rows.Next() {
         var uid int
         var postid int
         var term string
         var wordcount int
-        err := rows.Scan(&uid, &postid, &term, &wordcount)
+        var posted time.Time
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted)
         checkErr(err)
         wordCount := WordCount {
           Term: term,
@@ -295,21 +319,22 @@ func WordCountRootCollection() WordCounts {
 func TrendsCollection(term string) Trends {
   trends := Trends {}
 
-  rows := QueryTerms(term)
+  rows := QueryTerms(term, "")
     for rows.Next() {
         var uid int
         var postid int
         var term string
         var wordcount int
-        err := rows.Scan(&uid, &postid, &term, &wordcount)
+        var posted time.Time
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted)
         checkErr(err)
         postRows := QueryPosts(fmt.Sprintf(" WHERE uid=%d", postid))
         for postRows.Next() {
           var thisPostuid int
           var mined time.Time
-          var posted time.Time
+          var postPosted time.Time
           var sourceURI string
-          err = postRows.Scan(&thisPostuid, &mined, &posted, &sourceURI)
+          err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI)
           checkErr(err)
           termsRows := QueryTermsForPost(thisPostuid)
           wordCounts := WordCounts {}
@@ -318,7 +343,8 @@ func TrendsCollection(term string) Trends {
             var wcpostid int
             var wcTerm string
             var wordcount int
-            err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount)
+            var wcPosted time.Time
+            err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted)
             checkErr(err)
             wordCount := WordCount {
               Term: wcTerm,
@@ -330,7 +356,7 @@ func TrendsCollection(term string) Trends {
             Term: term,
             SourceURI: sourceURI,
             Mined: mined,
-            Posted: posted,
+            Posted: postPosted,
             WordCounts: wordCounts,
           }
           trends = append(trends, trend)

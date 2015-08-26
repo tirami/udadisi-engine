@@ -34,7 +34,7 @@ var datetime = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 // Post: uid serial mined:datetime posted:datetime sourceURI: string
 var CREATE = map[int]string{
     Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text)",
-    Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer)",
+    Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone)",
 }
 
 var DROP = map[int]string{
@@ -95,7 +95,7 @@ func AddTweet(address string, contents string, createdAt string) {
     cleanedContent := reg.ReplaceAllString(strings.ToLower(string(contents)), "")
     wordCounts := CountWords(cleanedContent)
     for k, v := range wordCounts {
-      InsertTerm(k, v, lastInsertId)
+      InsertTerm(k, v, lastInsertId, createdAt)
     }
 }
 
@@ -161,9 +161,9 @@ func UpdatePost() {
     */
 }
 
-func InsertTerm(term string, wordcount int, postid int) {
+func InsertTerm(term string, wordcount int, postid int, posted string) {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount) VALUES($1,$2,$3) returning uid;", postid, term, wordcount).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted) VALUES($1,$2,$3,$4) returning uid;", postid, term, wordcount, posted).Scan(&lastInsertId)
     checkErr(err)
 }
 
@@ -175,8 +175,14 @@ func InsertPost(sourceURI string, createdAt string) int {
     return lastInsertId
 }
 
-func QueryTerms(term string) *sql.Rows {
-    rows, err := db.Query("SELECT * FROM terms WHERE LOWER(term) LIKE '%' || LOWER($1) || '%' ORDER BY term", term)
+func QueryTerms(term string, fromDate string) *sql.Rows {
+    t, err := time.Parse("20060102", fromDate)
+
+    if err != nil {
+        fmt.Errorf("invalid date: %v", err)
+    }
+
+    rows, err := db.Query("SELECT * FROM terms WHERE posted > $1 AND LOWER(term) LIKE '%' || LOWER($2) || '%' ORDER BY term", t.Format(time.RFC3339), term)
     checkErr(err)
 
     return rows
