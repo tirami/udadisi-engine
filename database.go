@@ -77,7 +77,7 @@ func PopulateWithTweets(user string) {
 
     v := url.Values{}
     v.Set("screen_name", user)
-    v.Set("count", "10")
+    v.Set("count", "200")
     timeline, _ := api.GetUserTimeline(v)
     for _ , tweet := range timeline {
         tweetUrl := fmt.Sprintf("https://twitter.com/%s/status/%s", user, tweet.IdStr)
@@ -175,17 +175,25 @@ func InsertPost(sourceURI string, createdAt string) int {
     return lastInsertId
 }
 
-func QueryTerms(term string, fromDate string) *sql.Rows {
+func QueryTerms(term string, fromDate string, interval int) *sql.Rows {
     t, err := time.Parse("20060102", fromDate)
-
     if err != nil {
         fmt.Errorf("invalid date: %v", err)
     }
 
-    rows, err := db.Query("SELECT * FROM terms WHERE posted > $1 AND LOWER(term) LIKE '%' || LOWER($2) || '%' ORDER BY term", t.Format(time.RFC3339), term)
-    checkErr(err)
+    if interval > 0 {
+        toDate := t.Add(time.Duration(interval) * time.Hour * 24)
 
-    return rows
+        rows, err := db.Query("SELECT * FROM terms WHERE posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", t.Format(time.RFC3339), toDate.Format(time.RFC3339), term)
+        checkErr(err)
+        return rows
+    } else {
+        rows, err := db.Query("SELECT * FROM terms WHERE posted > $1 AND LOWER(term) LIKE '%' || LOWER($2) || '%' ORDER BY term", t.Format(time.RFC3339), term)
+        checkErr(err)
+        return rows
+    }
+
+
 }
 
 func QueryTermsForPost(postid int) *sql.Rows {
