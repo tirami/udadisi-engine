@@ -45,7 +45,38 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
   fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation/code\">{hostname}/v1/trends/samplelocation/code</a></li>")
   fmt.Fprintf(w, "</ul>")
+
+  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
 }
+
+func AdminIndex(w http.ResponseWriter, r *http.Request) {
+  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
+  fmt.Fprintf(w, "<h1>Udadisi Engine Admin Suite</h1>")
+  fmt.Fprintf(w, "<ul>")
+  fmt.Fprintf(w, "<li><a href=\"/admin/builddatabase\">Build Database</a></li>")
+  fmt.Fprintf(w, "<li><a href=\"/admin/builddata\">Build Data</a></li>")
+  fmt.Fprintf(w, "</ul>")
+}
+
+func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
+
+  BuildDatabase()
+
+  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
+  fmt.Fprintf(w, "<p>Database built</p>")
+  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
+}
+
+
+func AdminBuildData(w http.ResponseWriter, r *http.Request) {
+
+  BuildWithTweets()
+
+  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
+  fmt.Fprintf(w, "<p>Data built</p>")
+  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
+}
+
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   //vars := mux.Vars(r)
@@ -90,7 +121,7 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   last_trend_term := ""
   totalCounts := map[string]int {}
   thisTerm := ""
-  sources := []string {}
+  sources := Sources {}
   for _, trend := range trends {
     if trend.Term != last_trend_term {
 
@@ -99,13 +130,17 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
         termTrends = append(termTrends, termTrend)
       }
 
-
       last_trend_term = trend.Term
       totalCounts = map[string]int {}
-      sources = []string {}
+      sources = Sources {}
       thisTerm = trend.Term
     }
-    sources = append(sources, trend.SourceURI)
+    source := Source {
+      Source: "Twitter",
+      SourceURI: trend.SourceURI,
+      Posted: trend.Posted,
+    }
+    sources = append(sources, source)
 
     for _, wordcount := range trend.WordCounts {
       count := totalCounts[wordcount.Term]
@@ -157,7 +192,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   last_trend_term := ""
   totalCounts := map[string]int {}
   thisTerm := ""
-  sources := []string {}
+  sources := Sources {}
   for _, trend := range trends {
     if trend.Term != last_trend_term {
 
@@ -167,10 +202,15 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
 
       last_trend_term = trend.Term
       totalCounts = map[string]int {}
-      sources = []string {}
+      sources = Sources {}
       thisTerm = trend.Term
     }
-    sources = append(sources, trend.SourceURI)
+    source := Source {
+      Source: "Twitter",
+      SourceURI: trend.SourceURI,
+      Posted: trend.Posted,
+    }
+    sources = append(sources, source)
 
     for _, wordcount := range trend.WordCounts {
       count := totalCounts[wordcount.Term]
@@ -188,7 +228,7 @@ func DisplayRootCount(w http.ResponseWriter, location string, totalCounts map[st
   }
 }
 
-func BuildTrendsJSON(term string, totalCounts map[string]int, sources []string) TermTrend {
+func BuildTrendsJSON(term string, totalCounts map[string]int, sources Sources) TermTrend {
   termTrend := TermTrend {}
 
   termTrend.Term = term
@@ -205,10 +245,7 @@ func BuildTrendsJSON(term string, totalCounts map[string]int, sources []string) 
 
   termSources := Sources {}
   for _, source := range sources {
-    termSource := Source {
-      Source: "Twitter",
-      SourceURI: source,
-    }
+    termSource := source
     termSources = append(termSources, termSource)
   }
   termTrend.Sources = termSources
@@ -216,7 +253,7 @@ func BuildTrendsJSON(term string, totalCounts map[string]int, sources []string) 
   return termTrend
 }
 
-func DisplayCount(w http.ResponseWriter, term string, totalCounts map[string]int, sources []string) {
+func DisplayCount(w http.ResponseWriter, term string, totalCounts map[string]int, sources Sources) {
   fmt.Fprintf(w, "<h2>%s (%d)</h2>", term, totalCounts[term])
 
   for _, res := range sortedKeys(totalCounts) {
@@ -225,7 +262,10 @@ func DisplayCount(w http.ResponseWriter, term string, totalCounts map[string]int
 
   fmt.Fprintf(w, "<h3>Sources</h3>")
   for _, source := range sources {
-    fmt.Fprintf(w, "<li><a href=\"%s\" target=\"_new\">%s</a></li>", source, source)
+    fmt.Fprintf(w, "<li>%s : %s : <a href=\"%s\" target=\"_new\">%s</a></li>",
+      source.Source,
+      source.Posted,
+      source.SourceURI, source.SourceURI)
   }
 }
 
@@ -290,6 +330,7 @@ func TrendsCollection(term string) Trends {
             Term: term,
             SourceURI: sourceURI,
             Mined: mined,
+            Posted: posted,
             WordCounts: wordCounts,
           }
           trends = append(trends, trend)

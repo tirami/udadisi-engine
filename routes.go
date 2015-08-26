@@ -66,4 +66,22 @@ var routes = Routes{
         "/web/trends/{location}/{term}",
         WebTrendsIndex,
     },
+    Route{
+        "AdminIndex",
+        "GET",
+        "/admin/",
+        AdminIndex,
+    },
+    Route{
+        "AdminBuildDatabase",
+        "GET",
+        "/admin/builddatabase",
+        AdminBuildDatabase,
+    },
+    Route{
+        "AdminBuildData",
+        "GET",
+        "/admin/builddata",
+        AdminBuildData,
+    },
 }

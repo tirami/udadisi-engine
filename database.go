@@ -55,7 +55,9 @@ func BuildDatabase() {
     DropTable(DROP[Terms])
     CreateTable(CREATE[Posts])
     CreateTable(CREATE[Terms])
+}
 
+func BuildWithTweets() {
     // Seed with some sample data
     fmt.Println("# Populating with seed data...")
     anaconda.SetConsumerKey(TWITTER_CONSUMER_KEY)
@@ -68,13 +70,6 @@ func BuildDatabase() {
     PopulateWithTweets("kickstarter")
 
     fmt.Println("# Populated")
-
-    /*
-    searchResult, _ := api.GetSearch("solar", nil)
-    for _ , tweet := range searchResult.Statuses {
-        fmt.Println(tweet.Text)
-    }
-    */
 }
 
 func PopulateWithTweets(user string) {
@@ -82,16 +77,16 @@ func PopulateWithTweets(user string) {
 
     v := url.Values{}
     v.Set("screen_name", user)
-    v.Set("count", "200")
+    v.Set("count", "10")
     timeline, _ := api.GetUserTimeline(v)
     for _ , tweet := range timeline {
         tweetUrl := fmt.Sprintf("https://twitter.com/%s/status/%s", user, tweet.IdStr)
-        AddTweet(tweetUrl, tweet.Text)
+        AddTweet(tweetUrl, tweet.Text, tweet.CreatedAt)
     }
 }
 
-func AddTweet(address string, contents string) {
-    lastInsertId := InsertPost(address)
+func AddTweet(address string, contents string, createdAt string) {
+    lastInsertId := InsertPost(address, createdAt)
 
     reg, err := regexp.Compile("[^A-Za-z @]+")
     if err != nil {
@@ -172,9 +167,9 @@ func InsertTerm(term string, wordcount int, postid int) {
     checkErr(err)
 }
 
-func InsertPost(sourceURI string) int {
+func InsertPost(sourceURI string, createdAt string) int {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO posts (mined, posted, sourceURI) VALUES($1,$2,$3) returning uid;", datetime.Format(time.RFC3339), datetime.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO posts (mined, posted, sourceURI) VALUES($1,$2,$3) returning uid;", datetime.Format(time.RFC3339), createdAt, sourceURI).Scan(&lastInsertId)
     checkErr(err)
 
     return lastInsertId
