@@ -125,7 +125,9 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   term := vars["term"]
 
   termTrends := TermTrends {}
-  trends := TrendsCollection(term)
+  fromParam := r.URL.Query().Get("from")
+
+  trends := TrendsCollection(term, fromParam)
 
   last_trend_term := ""
   totalCounts := map[string]int {}
@@ -199,15 +201,16 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
     }
   }
 
-  DisplayRootCount(w, location, sortedCounts)
+  DisplayRootCount(w, location, fromParam, sortedCounts)
 }
 
 func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
   term := vars["term"]
+  fromParam := r.URL.Query().Get("from")
 
-  trends := TrendsCollection(term)
+  trends := TrendsCollection(term, fromParam)
 
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
   fmt.Fprintf(w, "<h1><a href=\"../%s\">Main index</a></h1>", location)
@@ -220,7 +223,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
     if trend.Term != last_trend_term {
 
       if thisTerm != "" {
-        DisplayCount(w, thisTerm, totalCounts, sources)
+        DisplayCount(w, fromParam, thisTerm, totalCounts, sources)
       }
 
       last_trend_term = trend.Term
@@ -242,12 +245,16 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
     }
   }
 
-  DisplayCount(w, thisTerm, totalCounts, sources)
+  DisplayCount(w, fromParam, thisTerm, totalCounts, sources)
 }
 
-func DisplayRootCount(w http.ResponseWriter, location string, totalCounts WordCounts) {
+func DisplayRootCount(w http.ResponseWriter, location string, fromParam string, totalCounts WordCounts) {
   for _, res := range totalCounts {
-    fmt.Fprintf(w, "<li><a href=\"%s/%s\">%s</a> : %d</li>", location, res.Term, res.Term, res.Occurrences)
+    fmt.Fprintf(w, "<li><a href=\"%s/%s?from=%s\">%s</a> : %d</li>",
+      location,
+      res.Term,
+      fromParam,
+      res.Term, res.Occurrences)
   }
 }
 
@@ -276,11 +283,11 @@ func BuildTrendsJSON(term string, totalCounts map[string]int, sources Sources) T
   return termTrend
 }
 
-func DisplayCount(w http.ResponseWriter, term string, totalCounts map[string]int, sources Sources) {
+func DisplayCount(w http.ResponseWriter, fromParam string, term string, totalCounts map[string]int, sources Sources) {
   fmt.Fprintf(w, "<h2>%s (%d)</h2>", term, totalCounts[term])
 
   for _, res := range sortedKeys(totalCounts) {
-    fmt.Fprintf(w, "<li><a href=\"%s\">%s</a> : %d</li>", res, res, totalCounts[res])
+    fmt.Fprintf(w, "<li><a href=\"%s?from=%s\">%s</a> : %d</li>", res, fromParam, res, totalCounts[res])
   }
 
   fmt.Fprintf(w, "<h3>Sources</h3>")
@@ -316,10 +323,10 @@ func WordCountRootCollection(fromParam string) WordCounts {
     return wordCounts
 }
 
-func TrendsCollection(term string) Trends {
+func TrendsCollection(term string, fromParam string) Trends {
   trends := Trends {}
 
-  rows := QueryTerms(term, "")
+  rows := QueryTerms(term, fromParam)
     for rows.Next() {
         var uid int
         var postid int
