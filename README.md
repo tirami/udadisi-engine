@@ -23,8 +23,8 @@ API spec in Swagger:
 ### Environment variables
 The server uses the following environment variables:
 
-* POSTGRES_DB - database host address
-* DB_PASSWORD - db user password
+* POSTGRES_DB - database host address (defaults to localhost if not set)
+* DB_PASSWORD - db user password (defaults to udadisi if not set)
 
 ### Sample Data
 Currently the data is populated with 200 tweets from 5 Twitter accounts that I randomly selected. Some of them have related terms.
