@@ -9,12 +9,11 @@ or if you already have an older version installed
     
 ### Configuring and Populating Server
 
-1. Go to localhost:8080
-2. Go to Admin Home
-3. Select Build Database (this will delete all existing data and setup the new database schema)
-4. Select Build Seeds to populate the Seed sources
-5. Select Build Data to populate the data based on the Seed sources
-6. Select View Seeds to see a list of the Seed sources, their Miner type and Location
+1. Go to localhost:8080/admin
+2. Select Build Database (this will delete all existing data and setup the new database schema)
+3. Select Build Seeds to populate the Seed sources
+4. Select Build Data to populate the data based on the Seed sources
+5. Select View Seeds to see a list of the Seed sources, their Miner type and Location
 
 ### Sample Data Viewer
 
