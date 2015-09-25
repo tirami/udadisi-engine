@@ -34,3 +34,11 @@ type TermTrend struct {
 }
 
 type TermTrends []TermTrend
+
+type Seed struct {
+  Miner string `json:"miner"`
+  Location string `json:"location"`
+  Source string `json:"source"`
+}
+
+type Seeds []Seed

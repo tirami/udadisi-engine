@@ -33,13 +33,29 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
   fmt.Fprintf(w, "<h1>Welcome to the Udadisi Engine</h1>")
 
+  seeds := SeedsCollection()
 
-  fmt.Fprintf(w, "<h2>Sample data viewer</h2>")
+  fmt.Fprintf(w, "<h2>Locations</h2>")
   fmt.Fprintf(w, "<ul>")
-  fmt.Fprintf(w, "<li><a href=\"web/trends/samplelocation\">All words</a></li>")
-  fmt.Fprintf(w, "<li><a href=\"web/trends/samplelocation?limit=10\">Top 10 words</a></li>")
-  fmt.Fprintf(w, "<li><a href=\"web/trends/samplelocation?from=20150826\">All words posted from 26th August 2015</a></li>")
-  fmt.Fprintf(w, "<li><a href=\"web/trends/samplelocation?from=20150821&interval=3\">All words posted within 3 days from 21st August 2015</a></li>")
+
+  locations := map[string]bool {}
+  for _, seed := range seeds {
+    if locations[seed.Location] {
+
+      } else {
+        locations[seed.Location] = true
+      }
+  }
+
+  for location, _ := range locations {
+    fmt.Fprintf(w, "<li>%s</li>", location)
+    fmt.Fprintf(w, "<ul>")
+    fmt.Fprintf(w, "<li><a href=\"web/trends/%s\">All words</a></li>", location)
+    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?limit=10\">Top 10 words</a></li>", location)
+    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?from=20150826\">All words posted from 26th August 2015</a></li>", location)
+    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?from=20150821&interval=3\">All words posted within 3 days from 21st August 2015</a></li>", location)
+    fmt.Fprintf(w, "</ul>")
+  }
   fmt.Fprintf(w, "</ul>")
 
   fmt.Fprintf(w, "<h2>API Docs</h2>")
@@ -64,7 +80,10 @@ func AdminIndex(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<h1>Udadisi Engine Admin Suite</h1>")
   fmt.Fprintf(w, "<ul>")
   fmt.Fprintf(w, "<li><a href=\"/admin/builddatabase\">Build Database</a></li>")
+  fmt.Fprintf(w, "<li><a href=\"/admin/buildseeds\">Build Seeds</a></li>")
   fmt.Fprintf(w, "<li><a href=\"/admin/builddata\">Build Data</a></li>")
+  fmt.Fprintf(w, "<li><a href=\"/admin/seeds\">View Seeds</a></li>")
+
   fmt.Fprintf(w, "</ul>")
 }
 
@@ -77,6 +96,14 @@ func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
 }
 
+func AdminBuildSeeds(w http.ResponseWriter, r *http.Request) {
+
+  BuildSeeds()
+
+  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
+  fmt.Fprintf(w, "<p>Seeds set</p>")
+  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
+}
 
 func AdminBuildData(w http.ResponseWriter, r *http.Request) {
 
@@ -87,16 +114,32 @@ func AdminBuildData(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
 }
 
+func AdminSeeds(w http.ResponseWriter, r *http.Request) {
+
+  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
+
+  fmt.Fprintf(w, "<h1>Seeds</h1>")
+
+  seeds := SeedsCollection()
+
+  fmt.Fprintf(w, "<ul>")
+
+  for _, seed := range seeds {
+    fmt.Fprintf(w, "<li>%s - %s - %s</li>", seed.Miner, seed.Location, seed.Source)
+  }
+  fmt.Fprintf(w, "</ul>")
+}
+
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
-  //vars := mux.Vars(r)
-  //location := vars["location"]
+  vars := mux.Vars(r)
+  location := vars["location"]
   limitParam := r.URL.Query().Get("limit")
   limit, _ := strconv.ParseInt(limitParam, 10, 0)
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
-  wordCounts := WordCountRootCollection(fromParam, int(interval))
+  wordCounts := WordCountRootCollection(location, fromParam, int(interval))
 
   totalCounts := map[string]int {}
 
@@ -125,7 +168,7 @@ func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
 
 func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
-  //location := vars["location"]
+  location := vars["location"]
   term := vars["term"]
 
   termTrends := TermTrends {}
@@ -134,7 +177,7 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
   interval := int(intervalConv)
 
-  trends := TrendsCollection(term, fromParam, interval)
+  trends := TrendsCollection(location, term, fromParam, interval)
 
   last_trend_term := ""
   totalCounts := map[string]int {}
@@ -186,7 +229,7 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
-  wordCounts := WordCountRootCollection(fromParam, int(interval))
+  wordCounts := WordCountRootCollection(location, fromParam, int(interval))
 
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
   fmt.Fprintf(w, "<h1>Main index</h1>")
@@ -222,7 +265,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
   interval := int(intervalConv)
 
-  trends := TrendsCollection(term, fromParam, interval)
+  trends := TrendsCollection(location, term, fromParam, interval)
 
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
   fmt.Fprintf(w, "<h1><a href=\"../%s\">Main index</a></h1>", location)
@@ -314,17 +357,40 @@ func DisplayCount(w http.ResponseWriter, fromParam string, interval int, term st
 
 
 // Internal stuff
-func WordCountRootCollection(fromParam string, interval int) WordCounts {
+func SeedsCollection() Seeds {
+  seeds := Seeds {}
+
+  rows := QuerySeeds()
+  for rows.Next() {
+    var uid int
+    var miner string
+    var location string
+    var source string
+    err := rows.Scan(&uid, &miner, &location, &source)
+    checkErr(err)
+    seed := Seed {
+      Miner: miner,
+      Location: location,
+      Source: source,
+    }
+    seeds = append(seeds, seed)
+  }
+
+  return seeds
+}
+
+func WordCountRootCollection(location string, fromParam string, interval int) WordCounts {
   wordCounts := WordCounts {}
 
-  rows := QueryTerms("", fromParam, interval)
+  rows := QueryTerms(location, "", fromParam, interval)
     for rows.Next() {
         var uid int
         var postid int
         var term string
         var wordcount int
         var posted time.Time
-        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted)
+        var termLocation string
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation)
         checkErr(err)
         wordCount := WordCount {
           Term: term,
@@ -336,17 +402,18 @@ func WordCountRootCollection(fromParam string, interval int) WordCounts {
     return wordCounts
 }
 
-func TrendsCollection(term string, fromParam string, interval int) Trends {
+func TrendsCollection(location string, term string, fromParam string, interval int) Trends {
   trends := Trends {}
 
-  rows := QueryTerms(term, fromParam, interval)
+  rows := QueryTerms(location, term, fromParam, interval)
     for rows.Next() {
         var uid int
         var postid int
         var term string
         var wordcount int
         var posted time.Time
-        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted)
+        var location string
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location)
         checkErr(err)
         postRows := QueryPosts(fmt.Sprintf(" WHERE uid=%d", postid))
         for postRows.Next() {
@@ -354,7 +421,8 @@ func TrendsCollection(term string, fromParam string, interval int) Trends {
           var mined time.Time
           var postPosted time.Time
           var sourceURI string
-          err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI)
+          var postLocation string
+          err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI, &postLocation)
           checkErr(err)
           termsRows := QueryTermsForPost(thisPostuid)
           wordCounts := WordCounts {}
@@ -364,7 +432,8 @@ func TrendsCollection(term string, fromParam string, interval int) Trends {
             var wcTerm string
             var wordcount int
             var wcPosted time.Time
-            err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted)
+            var wcLocation string
+            err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted, &wcLocation)
             checkErr(err)
             wordCount := WordCount {
               Term: wcTerm,

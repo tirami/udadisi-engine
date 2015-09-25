@@ -22,24 +22,28 @@ const (
 const (
     Posts = iota
     Terms
+    SeedsTable
 )
 
 var tables = map[int]string{
     0: "Posts",
     1: "Terms",
+    2: "SeedsTable",
 }
 
 var datetime = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 
 // Post: uid serial mined:datetime posted:datetime sourceURI: string
 var CREATE = map[int]string{
-    Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text)",
-    Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone)",
+    Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text, location text)",
+    Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone, location text)",
+    SeedsTable: "CREATE TABLE IF NOT EXISTS seeds(uid serial NOT NULL, minertype text, location text, source text)",
 }
 
 var DROP = map[int]string{
     Posts: "DROP TABLE IF EXISTS posts",
     Terms: "DROP TABLE IF EXISTS terms",
+    SeedsTable: "DROP TABLE IF EXISTS seeds",
 }
 
 const (
@@ -53,8 +57,19 @@ func BuildDatabase() {
 
     DropTable(DROP[Posts])
     DropTable(DROP[Terms])
+    DropTable(DROP[SeedsTable])
     CreateTable(CREATE[Posts])
     CreateTable(CREATE[Terms])
+    CreateTable(CREATE[SeedsTable])
+}
+
+func BuildSeeds() {
+    InsertSeed("twitter", "Dhaka", "a2ztechnews")
+    InsertSeed("twitter", "Scotland", "symboticaandrew")
+    InsertSeed("twitter", "Scotland", "digitalwestie")
+    InsertSeed("twitter", "Scotland", "pluginadventure")
+    InsertSeed("twitter", "UK", "pluginadventure")
+    InsertSeed("twitter", "UK", "kickstarter")
 }
 
 func BuildWithTweets() {
@@ -63,16 +78,22 @@ func BuildWithTweets() {
     anaconda.SetConsumerKey(TWITTER_CONSUMER_KEY)
     anaconda.SetConsumerSecret(TWITTER_CONSUMER_SECRET)
 
-    PopulateWithTweets("symboticaandrew")
-    PopulateWithTweets("digitalwestie")
-    PopulateWithTweets("mashable")
-    PopulateWithTweets("pluginadventure")
-    PopulateWithTweets("kickstarter")
+    rows := QuerySeeds()
+    for rows.Next() {
+        var uid int
+        var miner string
+        var location string
+        var source string
+        err := rows.Scan(&uid, &miner, &location, &source)
+        checkErr(err)
+
+        PopulateWithTweets(location, source)
+    }
 
     fmt.Println("# Populated")
 }
 
-func PopulateWithTweets(user string) {
+func PopulateWithTweets(location string, user string) {
     api := anaconda.NewTwitterApi(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
 
     v := url.Values{}
@@ -81,12 +102,12 @@ func PopulateWithTweets(user string) {
     timeline, _ := api.GetUserTimeline(v)
     for _ , tweet := range timeline {
         tweetUrl := fmt.Sprintf("https://twitter.com/%s/status/%s", user, tweet.IdStr)
-        AddTweet(tweetUrl, tweet.Text, tweet.CreatedAt)
+        AddTweet(location, tweetUrl, tweet.Text, tweet.CreatedAt)
     }
 }
 
-func AddTweet(address string, contents string, createdAt string) {
-    lastInsertId := InsertPost(address, createdAt)
+func AddTweet(location string, address string, contents string, createdAt string) {
+    lastInsertId := InsertPost(location, address, createdAt)
 
     reg, err := regexp.Compile("[^A-Za-z @]+")
     if err != nil {
@@ -95,7 +116,7 @@ func AddTweet(address string, contents string, createdAt string) {
     cleanedContent := reg.ReplaceAllString(strings.ToLower(string(contents)), "")
     wordCounts := CountWords(cleanedContent)
     for k, v := range wordCounts {
-      InsertTerm(k, v, lastInsertId, createdAt)
+      InsertTerm(location, k, v, lastInsertId, createdAt)
     }
 }
 
@@ -161,21 +182,27 @@ func UpdatePost() {
     */
 }
 
-func InsertTerm(term string, wordcount int, postid int, posted string) {
+func InsertSeed(miner string, location string, source string) {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted) VALUES($1,$2,$3,$4) returning uid;", postid, term, wordcount, posted).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO seeds (minertype, location, source) VALUES($1,$2,$3) returning uid;", miner, location, source).Scan(&lastInsertId)
     checkErr(err)
 }
 
-func InsertPost(sourceURI string, createdAt string) int {
+func InsertTerm(location string, term string, wordcount int, postid int, posted string) {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO posts (mined, posted, sourceURI) VALUES($1,$2,$3) returning uid;", datetime.Format(time.RFC3339), createdAt, sourceURI).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted, location) VALUES($1,$2,$3,$4,$5) returning uid;", postid, term, wordcount, posted, location).Scan(&lastInsertId)
+    checkErr(err)
+}
+
+func InsertPost(location string, sourceURI string, createdAt string) int {
+    var lastInsertId int
+    err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, datetime.Format(time.RFC3339), createdAt, sourceURI).Scan(&lastInsertId)
     checkErr(err)
 
     return lastInsertId
 }
 
-func QueryTerms(term string, fromDate string, interval int) *sql.Rows {
+func QueryTerms(location string, term string, fromDate string, interval int) *sql.Rows {
     t, err := time.Parse("20060102", fromDate)
     if err != nil {
         fmt.Errorf("invalid date: %v", err)
@@ -184,11 +211,11 @@ func QueryTerms(term string, fromDate string, interval int) *sql.Rows {
     if interval > 0 {
         toDate := t.Add(time.Duration(interval) * time.Hour * 24)
 
-        rows, err := db.Query("SELECT * FROM terms WHERE posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", t.Format(time.RFC3339), toDate.Format(time.RFC3339), term)
+        rows, err := db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", t.Format(time.RFC3339), toDate.Format(time.RFC3339), term, location)
         checkErr(err)
         return rows
     } else {
-        rows, err := db.Query("SELECT * FROM terms WHERE posted > $1 AND LOWER(term) LIKE '%' || LOWER($2) || '%' ORDER BY term", t.Format(time.RFC3339), term)
+        rows, err := db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($1) || '%' AND posted > $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", location, t.Format(time.RFC3339), term)
         checkErr(err)
         return rows
     }
@@ -205,6 +232,19 @@ func QueryTermsForPost(postid int) *sql.Rows {
 
 func QueryPosts(args ...string) *sql.Rows {
     query := "SELECT * FROM posts"
+    var buffer = bytes.NewBufferString(query)
+    for _, v := range args {
+        buffer.WriteString(fmt.Sprint(v, " "))
+    }
+    query = buffer.String()
+    rows, err := db.Query(query)
+    checkErr(err)
+
+    return rows
+}
+
+func QuerySeeds(args ...string) *sql.Rows {
+    query := "SELECT * from seeds"
     var buffer = bytes.NewBufferString(query)
     for _, v := range args {
         buffer.WriteString(fmt.Sprint(v, " "))
