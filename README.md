@@ -6,6 +6,21 @@
 or if you already have an older version installed
 
     go get -u github.com/tirami/udadisi-engine
+    
+### Configuring and Populating Server
+
+1. Go to localhost:8080
+2. Go to Admin Home
+3. Select Build Database (this will delete all existing data and setup the new database schema)
+4. Select Build Seeds to populate the Seed sources
+5. Select Build Data to populate the data based on the Seed sources
+6. Select View Seeds to see a list of the Seed sources, their Miner type and Location
+
+### Sample Data Viewer
+
+1. Go to localhost:8080
+2. Select various data queries for each of the locations
+
 
 A trival server that responds to the following:
 
@@ -27,7 +42,7 @@ The server uses the following environment variables:
 * DB_PASSWORD - db user password (defaults to udadisi if not set)
 
 ### Sample Data
-Currently the data is populated with 200 tweets from 5 Twitter accounts that I randomly selected. Some of them have related terms.
+Currently the data is populated with 200 tweets from 1 offical source Twitter account and 5 additional Twitter accounts that I randomly selected. Some of them have related terms.
 
 ### Setting up Postgres database
     createuser --createdb --login -P udadisi
