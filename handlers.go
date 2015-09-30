@@ -397,31 +397,40 @@ func SeedsCollection() Seeds {
 func WordCountRootCollection(location string, fromParam string, interval int) WordCounts {
   wordCounts := WordCounts {}
 
+  if location == "all" {
+    location = ""
+  }
   rows := QueryTerms(location, "", fromParam, interval)
-    for rows.Next() {
-        var uid int
-        var postid int
-        var term string
-        var wordcount int
-        var posted time.Time
-        var termLocation string
-        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation)
-        checkErr(err)
-        wordCount := WordCount {
-          Term: term,
-          Occurrences: wordcount,
-        }
-        wordCounts = append(wordCounts, wordCount)
-    }
 
-    return wordCounts
+   
+  for rows.Next() {
+    var uid int
+    var postid int
+    var term string
+    var wordcount int
+    var posted time.Time
+    var termLocation string
+    err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation)
+    checkErr(err)
+    wordCount := WordCount {
+      Term: term,
+      Occurrences: wordcount,
+    }
+    wordCounts = append(wordCounts, wordCount)
+   }
+
+  return wordCounts
 }
 
 func TrendsCollection(location string, term string, fromParam string, interval int) Trends {
   trends := Trends {}
 
+  if location == "all" {
+    location = ""
+  }
   rows := QueryTerms(location, term, fromParam, interval)
-    for rows.Next() {
+  
+  for rows.Next() {
         var uid int
         var postid int
         var term string
