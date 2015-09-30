@@ -8,6 +8,7 @@ import (
   "strconv"
   "io/ioutil"
   "os"
+  "html/template"
 
   "github.com/gorilla/mux"
 )
@@ -36,9 +37,13 @@ func Index(w http.ResponseWriter, r *http.Request) {
   seeds := SeedsCollection()
 
   fmt.Fprintf(w, "<h2>Locations</h2>")
+  fmt.Fprintf(w, "<p>Select a location to view trends for.</p>")
   fmt.Fprintf(w, "<ul>")
 
   locations := map[string]bool {}
+
+  // Add the default 'all' location
+  locations["all"] = true
   for _, seed := range seeds {
     if locations[seed.Location] {
 
@@ -76,15 +81,25 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func AdminIndex(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
-  fmt.Fprintf(w, "<h1>Udadisi Engine Admin Suite</h1>")
-  fmt.Fprintf(w, "<ul>")
-  fmt.Fprintf(w, "<li><a href=\"/admin/builddatabase\">Build Database</a></li>")
-  fmt.Fprintf(w, "<li><a href=\"/admin/buildseeds\">Build Seeds</a></li>")
-  fmt.Fprintf(w, "<li><a href=\"/admin/builddata\">Build Data</a></li>")
-  fmt.Fprintf(w, "<li><a href=\"/admin/seeds\">View Seeds</a></li>")
+  content := make(map[string]string)
+  content["Title"] = "Admin Home Page"
+  renderTemplate(w, "admin/index", content)
+}
 
-  fmt.Fprintf(w, "</ul>")
+func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]string) {
+  t, err := template.ParseFiles("views/" + tmpl + ".html")
+  
+  if err != nil {
+    fmt.Println("%s", err)
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+    
+  err = t.Execute(w, content)
+  if err != nil {
+    fmt.Println("%s", err)
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+  }
 }
 
 func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
