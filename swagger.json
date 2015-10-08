@@ -28,7 +28,36 @@
                 }
             }
         },
-        "/v1/trends/{location}": {
+        "/v1/locations/{location}/stats": {
+            "get": {
+                "description": "Gets `Stats` object.\n",
+                "parameters": [
+                    {
+                        "name": "location",
+                        "in": "path",
+                        "description": "name of location that the states should be from",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "title": "Stats",
+                            "type": "object",
+                            "properties": {
+                                "trendscount": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/locations/{location}/trends": {
             "get": {
                 "description": "Gets `WordCount` objects.\nOptional query param of **limit** determins top number of word counts returned\n",
                 "parameters": [
@@ -71,7 +100,7 @@
                 }
             }
         },
-        "/v1/trends/{location}/{term}": {
+        "/v1/locations/{location}/trends/{term}": {
             "get": {
                 "description": "Gets `Trend` objects.\nOptional query param of **velocity** determines\nminimum velocity of trends returned\n",
                 "parameters": [

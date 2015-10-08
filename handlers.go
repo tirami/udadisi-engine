@@ -34,31 +34,17 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
   fmt.Fprintf(w, "<h1>Welcome to the Udadisi Engine</h1>")
 
-  seeds := SeedsCollection()
-
+  locations := BuildLocationsList()
   fmt.Fprintf(w, "<h2>Locations</h2>")
   fmt.Fprintf(w, "<p>Select a location to view trends for.</p>")
   fmt.Fprintf(w, "<ul>")
-
-  locations := map[string]bool {}
-
-  // Add the default 'all' location
-  locations["all"] = true
-  for _, seed := range seeds {
-    if locations[seed.Location] {
-
-      } else {
-        locations[seed.Location] = true
-      }
-  }
-
-  for location, _ := range locations {
-    fmt.Fprintf(w, "<li>%s</li>", location)
+  for _, location := range locations {
+    fmt.Fprintf(w, "<li>%s</li>", location.Name)
     fmt.Fprintf(w, "<ul>")
-    fmt.Fprintf(w, "<li><a href=\"web/trends/%s\">All words</a></li>", location)
-    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?limit=10\">Top 10 words</a></li>", location)
-    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?from=20150826\">All words posted from 26th August 2015</a></li>", location)
-    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?from=20150821&interval=3\">All words posted within 3 days from 21st August 2015</a></li>", location)
+    fmt.Fprintf(w, "<li><a href=\"web/trends/%s\">All words</a></li>", location.Name)
+    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?limit=10\">Top 10 words</a></li>", location.Name)
+    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?from=20150826\">All words posted from 26th August 2015</a></li>", location.Name)
+    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?from=20150821&interval=3\">All words posted within 3 days from 21st August 2015</a></li>", location.Name)
     fmt.Fprintf(w, "</ul>")
   }
   fmt.Fprintf(w, "</ul>")
@@ -66,19 +52,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<h2>API Docs</h2>")
   fmt.Fprintf(w, "<a href=\"http://developer.udadisi.com\">http://developer.udadisi.com</a>")
 
-  fmt.Fprintf(w, "<h2>JSON Output</h2>")
-  fmt.Fprintf(w, "<p>Looking for JSON output? Use the following:</p>")
-  fmt.Fprintf(w, "<ul>")
-  fmt.Fprintf(w, "<li><a href=\"v1/locations\">{hostname}/v1/locations</a> for list of locations</li>")
-  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation\">{hostname}/v1/trends/samplelocation</a></li>")
-  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation?limit=10\">{hostname}/v1/trends/samplelocation?limit=10</a> for top 10 results</li>")
-  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation?from=20150826\">{hostname}/v1/trends/samplelocation?from=20150826</a> for results posted from 26th August 2015</li>")
-  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation?from=20150821&interval=3\">{hostname}/v1/trends/samplelocation?from=20150821&interval=3</a> for results posted within 3 days from 21st August 2015</li>")
-
-  fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation/code\">{hostname}/v1/trends/samplelocation/code</a></li>")
-  fmt.Fprintf(w, "</ul>")
-
-  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
+  fmt.Fprintf(w, "<p><a href=\"/admin/\">Admin Home</a></p>")
 }
 
 func AdminIndex(w http.ResponseWriter, r *http.Request) {
@@ -146,8 +120,39 @@ func AdminSeeds(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "</ul>")
 }
 
-func LocationsIndex(w http.ResponseWriter, r *http.Request) {
+func RenderLocationsJSON(w http.ResponseWriter, r *http.Request) {
+  w.Header().Add("Access-Control-Allow-Origin", "*")
+  w.Header().Add("Access-Control-Allow-Methods", "GET")
+  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
+  json.NewEncoder(w).Encode(BuildLocationsList())
+}
 
+func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
+  vars := mux.Vars(r)
+  location := vars["location"]
+  intervalParam := r.URL.Query().Get("interval")
+  interval, _ := strconv.ParseInt(intervalParam, 10, 0)
+  fromParam := r.URL.Query().Get("from")
+  wordCounts := WordCountRootCollection(location, fromParam, int(interval))
+
+  totalCounts := map[string]int {}
+
+  for _, wordcount := range wordCounts {
+    count := totalCounts[wordcount.Term]
+    count = count + wordcount.Occurrences
+    totalCounts[wordcount.Term] = count
+  }
+
+  stats := map[string]string {}
+  stats["trendscount"] = strconv.Itoa(len(totalCounts))
+
+  w.Header().Add("Access-Control-Allow-Origin", "*")
+  w.Header().Add("Access-Control-Allow-Methods", "GET")
+  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
+  json.NewEncoder(w).Encode(stats)
+}
+
+func BuildLocationsList() Locations {
   seeds := SeedsCollection()
   locations := Locations{}
   locationsAdded := map[string]Location {}
@@ -168,12 +173,7 @@ func LocationsIndex(w http.ResponseWriter, r *http.Request) {
       }
   }
 
-
-
-  w.Header().Add("Access-Control-Allow-Origin", "*")
-  w.Header().Add("Access-Control-Allow-Methods", "GET")
-  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
-  json.NewEncoder(w).Encode(locations)
+  return locations
 }
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
@@ -349,6 +349,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func DisplayRootCount(w http.ResponseWriter, location string, fromParam string, interval int, totalCounts WordCounts) {
+  fmt.Fprintf(w, "(%d terms)", len(totalCounts))
   for _, res := range totalCounts {
     fmt.Fprintf(w, "<li><a href=\"%s/%s?from=%s&interval=%d\">%s</a> : %d</li>",
       location,
