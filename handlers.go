@@ -69,6 +69,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<h2>JSON Output</h2>")
   fmt.Fprintf(w, "<p>Looking for JSON output? Use the following:</p>")
   fmt.Fprintf(w, "<ul>")
+  fmt.Fprintf(w, "<li><a href=\"v1/locations\">{hostname}/v1/locations</a> for list of locations</li>")
   fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation\">{hostname}/v1/trends/samplelocation</a></li>")
   fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation?limit=10\">{hostname}/v1/trends/samplelocation?limit=10</a> for top 10 results</li>")
   fmt.Fprintf(w, "<li><a href=\"v1/trends/samplelocation?from=20150826\">{hostname}/v1/trends/samplelocation?from=20150826</a> for results posted from 26th August 2015</li>")
@@ -88,13 +89,13 @@ func AdminIndex(w http.ResponseWriter, r *http.Request) {
 
 func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]string) {
   t, err := template.ParseFiles("views/" + tmpl + ".html")
-  
+
   if err != nil {
     fmt.Println("%s", err)
     http.Error(w, err.Error(), http.StatusInternalServerError)
     return
   }
-    
+
   err = t.Execute(w, content)
   if err != nil {
     fmt.Println("%s", err)
@@ -145,6 +146,35 @@ func AdminSeeds(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "</ul>")
 }
 
+func LocationsIndex(w http.ResponseWriter, r *http.Request) {
+
+  seeds := SeedsCollection()
+  locations := Locations{}
+  locationsAdded := map[string]Location {}
+
+  // Add the default 'all' location
+  allLocations := Location{
+    Name: "all",
+  }
+  locations = append(locations, allLocations)
+
+  locationsAdded["all"] = allLocations
+  for _, seed := range seeds {
+    if _, exists := locationsAdded[seed.Location]; !exists {
+        locationsAdded[seed.Location] = Location{
+          Name: seed.Location,
+        }
+        locations = append(locations, locationsAdded[seed.Location])
+      }
+  }
+
+
+
+  w.Header().Add("Access-Control-Allow-Origin", "*")
+  w.Header().Add("Access-Control-Allow-Methods", "GET")
+  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
+  json.NewEncoder(w).Encode(locations)
+}
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
@@ -402,7 +432,7 @@ func WordCountRootCollection(location string, fromParam string, interval int) Wo
   }
   rows := QueryTerms(location, "", fromParam, interval)
 
-   
+
   for rows.Next() {
     var uid int
     var postid int
@@ -429,7 +459,7 @@ func TrendsCollection(location string, term string, fromParam string, interval i
     location = ""
   }
   rows := QueryTerms(location, term, fromParam, interval)
-  
+
   for rows.Next() {
         var uid int
         var postid int

@@ -43,6 +43,12 @@ var routes = Routes{
         Index,
     },
     Route{
+        "LocationsIndex",
+        "GET",
+        "/v1/locations",
+        LocationsIndex,
+    },
+    Route{
         "TrendsIndex",
         "GET",
         "/v1/trends/{location}/{term}",

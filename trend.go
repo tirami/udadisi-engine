@@ -42,3 +42,9 @@ type Seed struct {
 }
 
 type Seeds []Seed
+
+type Location struct {
+  Name string `json:name`
+}
+
+type Locations []Location
