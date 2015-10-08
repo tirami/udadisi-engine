@@ -5,6 +5,29 @@
         "title": "Udadisi"
     },
     "paths": {
+        "/v1/locations": {
+            "get": {
+                "description": "Gets 'Location' objects.\n",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "title": "ArrayOfLocations",
+                            "type": "array",
+                            "items": {
+                                "title": "Location",
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/trends/{location}": {
             "get": {
                 "description": "Gets `WordCount` objects.\nOptional query param of **limit** determins top number of word counts returned\n",
