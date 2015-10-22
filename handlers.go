@@ -56,12 +56,12 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func AdminIndex(w http.ResponseWriter, r *http.Request) {
-  content := make(map[string]string)
+  content := make(map[string]interface{})
   content["Title"] = "Admin Home Page"
   renderTemplate(w, "admin/index", content)
 }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]string) {
+func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]interface{}) {
   t, err := template.ParseFiles("views/" + tmpl + ".html")
 
   if err != nil {
@@ -75,6 +75,30 @@ func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]strin
     fmt.Println("%s", err)
     http.Error(w, err.Error(), http.StatusInternalServerError)
   }
+}
+
+func AdminMiners(w http.ResponseWriter, r *http.Request) {
+  content := make(map[string]interface{})
+  content["Title"] = "Admin Miners"
+  content["Miners"] =  MinersCollection()
+  renderTemplate(w, "admin/miners/index", content)
+}
+
+func AdminCreateMiner(w http.ResponseWriter, r *http.Request) {
+  err := r.ParseForm()
+  if err != nil {
+    fmt.Println(err)
+  }
+
+  name := r.PostFormValue("name")
+  url := r.PostFormValue("url")
+  location := r.PostFormValue("location")
+  InsertMiner(name, location, url)
+  content := make(map[string]interface{})
+  content["Title"] = "Create Miner"
+  content["Miners"] =  MinersCollection()
+
+  renderTemplate(w, "admin/miners/index", content)
 }
 
 func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
@@ -451,6 +475,28 @@ func WordCountRootCollection(location string, fromParam string, interval int) Wo
    }
 
   return wordCounts
+}
+
+func MinersCollection() Miners {
+  miners := Miners {}
+
+  rows := QueryMiners()
+  for rows.Next() {
+    var uid int
+    var name string
+    var location string
+    var url string
+    err := rows.Scan(&uid, &name, &location, &url)
+    checkErr(err)
+    miner := Miner {
+      Name: name,
+      Location: location,
+      Url: url,
+    }
+    miners = append(miners, miner)
+  }
+
+  return miners
 }
 
 func TrendsCollection(location string, term string, fromParam string, interval int) Trends {

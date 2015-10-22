@@ -23,12 +23,14 @@ const (
     Posts = iota
     Terms
     SeedsTable
+    MinersTable
 )
 
 var tables = map[int]string{
     0: "Posts",
     1: "Terms",
     2: "SeedsTable",
+    3: "MinersTable",
 }
 
 var datetime = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
@@ -38,6 +40,7 @@ var CREATE = map[int]string{
     Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text, location text)",
     Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone, location text)",
     SeedsTable: "CREATE TABLE IF NOT EXISTS seeds(uid serial NOT NULL, minertype text, location text, source text)",
+    MinersTable: "CREATE TABLE IF NOT EXISTS miners(uid serial NOT NULL, name text, location text, url text)",
 }
 
 var DROP = map[int]string{
@@ -58,9 +61,11 @@ func BuildDatabase() {
     DropTable(DROP[Posts])
     DropTable(DROP[Terms])
     DropTable(DROP[SeedsTable])
+    DropTable(DROP[MinersTable])
     CreateTable(CREATE[Posts])
     CreateTable(CREATE[Terms])
     CreateTable(CREATE[SeedsTable])
+    CreateTable(CREATE[MinersTable])
 }
 
 func BuildSeeds() {
@@ -182,6 +187,12 @@ func UpdatePost() {
     */
 }
 
+func InsertMiner(name string, location string, url string) {
+    var lastInsertId int
+    err := db.QueryRow("INSERT INTO miners (name, location, url) VALUES($1,$2,$3) returning uid;", name, location, url).Scan(&lastInsertId)
+    checkErr(err)
+}
+
 func InsertSeed(miner string, location string, source string) {
     var lastInsertId int
     err := db.QueryRow("INSERT INTO seeds (minertype, location, source) VALUES($1,$2,$3) returning uid;", miner, location, source).Scan(&lastInsertId)
@@ -200,6 +211,13 @@ func InsertPost(location string, sourceURI string, createdAt string) int {
     checkErr(err)
 
     return lastInsertId
+}
+
+func QueryMiners() *sql.Rows {
+    rows, err := db.Query("SELECT * FROM miners")
+    checkErr(err)
+
+    return rows
 }
 
 func QueryTerms(location string, term string, fromDate string, interval int) *sql.Rows {

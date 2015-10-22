@@ -44,7 +44,15 @@ type Seed struct {
 type Seeds []Seed
 
 type Location struct {
-  Name string `json:name`
+  Name string `json:"name"`
 }
 
 type Locations []Location
+
+type Miner struct {
+  Name string `json:"name"`
+  Location string `json:"location"`
+  Url string `json:"url"`
+}
+
+type Miners []Miner

@@ -108,4 +108,16 @@ var routes = Routes{
         "/admin/seeds",
         AdminSeeds,
     },
+    Route{
+        "AdminMiners",
+        "GET",
+        "/admin/miners",
+        AdminMiners,
+    },
+    Route{
+        "AdminMiners",
+        "POST",
+        "/admin/miner",
+        AdminCreateMiner,
+    },
 }
