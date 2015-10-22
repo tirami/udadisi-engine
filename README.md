@@ -14,6 +14,25 @@ or if you already have an older version installed
 3. Select Build Seeds to populate the Seed sources
 4. Select Build Data to populate the data based on the Seed sources
 5. Select View Seeds to see a list of the Seed sources, their Miner type and Location
+6. Select Miners to view the list of current Miners and to register a new Miner
+
+### Posting from Miner to Engine
+Note: posted data is parsed but not yet processed.
+
+* POST JSON to localhost:8080/v1/minerpost
+
+    {
+        "posts": [{
+            "terms": {
+                "foo": 2,
+                "bar": 1
+            },
+            "url": "http://www.twitter.com/post/123456",
+            "datetime": 201508211014,
+            "mined_at": 201508211530
+        }],
+        "miner_id": "twitter miner 1"
+    }
 
 ### Sample Data Viewer
 
