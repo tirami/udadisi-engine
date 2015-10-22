@@ -1,6 +1,12 @@
 package main
 
-import "time"
+//import "time"
+import (
+    "fmt"
+    "strings"
+    "time"
+)
+
 
 type WordCount struct {
   Term string `json:"term"`
@@ -56,3 +62,31 @@ type Miner struct {
 }
 
 type Miners []Miner
+
+type MinerPostsJSON struct {
+  Posts []MinerPostJSON `json:"posts"`
+  MinerId string `json:"miner_id"`
+}
+
+type MinerPostJSON struct {
+  Terms map[string]interface{} `json:"terms"`
+  Url string `json:"url"`
+  Datetime myTime `json:"datetime"`
+  MinedAt myTime `json:"mined_at"`
+}
+
+type myTime struct {
+  time.Time
+}
+
+func (t *myTime) UnmarshalJSON(buf []byte) error {
+  fmt.Println(string(buf))
+
+    tt, err := time.Parse("200601021504", strings.Trim(string(buf), `"`))
+    if err != nil {
+        return err
+    }
+    t.Time = tt
+    return nil
+}
+ 

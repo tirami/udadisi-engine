@@ -77,6 +77,31 @@ func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]inter
   }
 }
 
+func MinerPost(w http.ResponseWriter, r *http.Request) {
+  decoder := json.NewDecoder(r.Body)
+
+  var posts MinerPostsJSON
+  err := decoder.Decode(&posts)
+  if err != nil {
+    fmt.Println("Error:", err)
+  }
+
+  fmt.Println("Post from Miner Id: ", posts.MinerId)
+
+  for _, post := range posts.Posts {
+    url := post.Url
+    posted := post.Datetime
+    mined := post.MinedAt
+    fmt.Println("SourceURI ", url)
+    fmt.Println("Posted ", posted)
+    fmt.Println("Mined ", mined)
+    fmt.Println("Terms and their counts")
+    for k, v := range post.Terms {
+            fmt.Println(k, v)
+        }
+  }
+}
+
 func AdminMiners(w http.ResponseWriter, r *http.Request) {
   content := make(map[string]interface{})
   content["Title"] = "Admin Miners"

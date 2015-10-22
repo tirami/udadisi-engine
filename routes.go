@@ -120,4 +120,10 @@ var routes = Routes{
         "/admin/miner",
         AdminCreateMiner,
     },
+    Route{
+        "MinerPost",
+        "POST",
+        "/v1/minerpost",
+        MinerPost,
+    },
 }
