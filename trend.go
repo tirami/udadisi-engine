@@ -11,6 +11,7 @@ import (
 type WordCount struct {
   Term string `json:"term"`
   Occurrences  int `json:"occurrences"`
+  Velocity float64 `json:"velocity"`
 }
 
 type WordCounts []WordCount
@@ -89,4 +90,4 @@ func (t *myTime) UnmarshalJSON(buf []byte) error {
     t.Time = tt
     return nil
 }
- 
+

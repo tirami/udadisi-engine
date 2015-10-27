@@ -6,28 +6,10 @@ import (
   "time"
   "encoding/json"
   "strconv"
-  "io/ioutil"
-  "os"
   "html/template"
 
   "github.com/gorilla/mux"
 )
-
-
-func Swagger(w http.ResponseWriter, r *http.Request) {
-  file, e := ioutil.ReadFile("./swagger.json")
-    if e != nil {
-        fmt.Printf("File error: %v\n", e)
-        os.Exit(1)
-    }
-
-  s := string(file)
-
-  w.Header().Add("Access-Control-Allow-Origin", "*")
-  w.Header().Add("Access-Control-Allow-Methods", "GET")
-  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
-  fmt.Fprintf(w, s)
-}
 
 func Index(w http.ResponseWriter, r *http.Request) {
   w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
@@ -245,11 +227,17 @@ func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
 
   sortedCounts := WordCounts {}
 
+  velocityInterval := float64(interval)
+  if velocityInterval == 0.0 {
+    velocityInterval = 1.0
+  }
+
   for _, res := range sortedKeys(totalCounts) {
     if limit == 0 || len(sortedCounts) < int(limit) {
       sortedCounts = append(sortedCounts, WordCount {
                 Term: res,
                 Occurrences: totalCounts[res],
+                Velocity: float64(totalCounts[res]) / velocityInterval,
               })
     }
   }
@@ -267,11 +255,17 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
 
   termTrends := TermTrends {}
   fromParam := r.URL.Query().Get("from")
+  velocityParam := r.URL.Query().Get("velocity")
+  minimumVelocity, _ := strconv.ParseFloat(velocityParam, 64)
   intervalParam := r.URL.Query().Get("interval")
   intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
   interval := int(intervalConv)
+  velocityInterval := float64(interval)
+    if velocityInterval == 0.0 {
+      velocityInterval = 1.0
+    }
 
-  trends := TrendsCollection(location, term, fromParam, interval)
+  trends := TrendsCollection(location, term, fromParam, interval, velocityInterval, minimumVelocity)
 
   last_trend_term := ""
   totalCounts := map[string]int {}
@@ -279,15 +273,15 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   sources := Sources {}
   for _, trend := range trends {
     if trend.Term != last_trend_term {
-
       if thisTerm != "" {
-        termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources)
+        termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources, velocityInterval)
         termTrends = append(termTrends, termTrend)
       }
 
       last_trend_term = trend.Term
       totalCounts = map[string]int {}
       sources = Sources {}
+
       thisTerm = trend.Term
     }
     source := Source {
@@ -304,7 +298,7 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
     }
   }
 
-  termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources)
+  termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources, velocityInterval)
   termTrends = append(termTrends, termTrend)
 
   w.Header().Add("Access-Control-Allow-Origin", "*")
@@ -359,7 +353,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
   interval := int(intervalConv)
 
-  trends := TrendsCollection(location, term, fromParam, interval)
+  trends := TrendsCollection(location, term, fromParam, interval, 1.0, 0.0)
 
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
   fmt.Fprintf(w, "<h1><a href=\"../%s\">Main index</a></h1>", location)
@@ -409,7 +403,7 @@ func DisplayRootCount(w http.ResponseWriter, location string, fromParam string, 
   }
 }
 
-func BuildTrendsJSON(term string, totalCounts map[string]int, sources Sources) TermTrend {
+func BuildTrendsJSON(term string, totalCounts map[string]int, sources Sources, velocityInterval float64) TermTrend {
   termTrend := TermTrend {}
 
   termTrend.Term = term
@@ -419,6 +413,7 @@ func BuildTrendsJSON(term string, totalCounts map[string]int, sources Sources) T
     termWordCount := WordCount {
       Term: res,
       Occurrences: totalCounts[res],
+      Velocity: float64(totalCounts[res]) / velocityInterval,
     }
     termWordCounts = append(termWordCounts, termWordCount)
   }
@@ -429,6 +424,7 @@ func BuildTrendsJSON(term string, totalCounts map[string]int, sources Sources) T
     termSource := source
     termSources = append(termSources, termSource)
   }
+
   termTrend.Sources = termSources
 
   return termTrend
@@ -475,6 +471,8 @@ func SeedsCollection() Seeds {
 }
 
 func WordCountRootCollection(location string, fromParam string, interval int) WordCounts {
+  fmt.Println("from: ", fromParam, " interval: ", interval)
+
   wordCounts := WordCounts {}
 
   if location == "all" {
@@ -524,7 +522,7 @@ func MinersCollection() Miners {
   return miners
 }
 
-func TrendsCollection(location string, term string, fromParam string, interval int) Trends {
+func TrendsCollection(location string, term string, fromParam string, interval int, velocityInterval float64, minimumVelocity float64) Trends {
   trends := Trends {}
 
   if location == "all" {

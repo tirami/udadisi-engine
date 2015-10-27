@@ -77,6 +77,20 @@
                         "description": "top number of word counts to return",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "date and time posts are from",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "interval",
+                        "in": "query",
+                        "description": "time interval to include post from from date",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -94,6 +108,11 @@
                                     },
                                     "occurances": {
                                         "type": "integer"
+                                    },
+                                    "velocity": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "description": "Value calculated on number of occurances divided by time period"
                                     }
                                 }
                             }
@@ -127,7 +146,8 @@
                         "in": "query",
                         "description": "minimum velocity of trends",
                         "required": false,
-                        "type": "integer"
+                        "type": "number",
+                        "format": "float"
                     },
                     {
                         "name": "from",
@@ -169,6 +189,11 @@
                                                 "term": {
                                                     "type": "string",
                                                     "description": "Term that the count is for"
+                                                },
+                                                "velocity": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "description": "Value calculated on number of occurances divided by time period"
                                                 }
                                             }
                                         }
