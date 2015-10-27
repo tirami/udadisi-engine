@@ -57,6 +57,7 @@ type Location struct {
 type Locations []Location
 
 type Miner struct {
+  Uid int `json:"id"`
   Name string `json:"name"`
   Location string `json:"location"`
   Url string `json:"url"`
@@ -70,7 +71,7 @@ type MinerPostsJSON struct {
 }
 
 type MinerPostJSON struct {
-  Terms map[string]interface{} `json:"terms"`
+  Terms map[string]int `json:"terms"`
   Url string `json:"url"`
   Datetime myTime `json:"datetime"`
   MinedAt myTime `json:"mined_at"`

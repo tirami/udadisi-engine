@@ -4,7 +4,7 @@ import (
     "database/sql"
     "fmt"
     "strings"
-    "regexp"
+    //"regexp"
     _ "github.com/lib/pq"
     "time"
     "bytes"
@@ -112,6 +112,7 @@ func PopulateWithTweets(location string, user string) {
 }
 
 func AddTweet(location string, address string, contents string, createdAt string) {
+    /*
     lastInsertId := InsertPost(location, address, createdAt)
 
     reg, err := regexp.Compile("[^A-Za-z @]+")
@@ -123,6 +124,7 @@ func AddTweet(location string, address string, contents string, createdAt string
     for k, v := range wordCounts {
       InsertTerm(location, k, v, lastInsertId, createdAt)
     }
+    */
 }
 
 
@@ -199,15 +201,15 @@ func InsertSeed(miner string, location string, source string) {
     checkErr(err)
 }
 
-func InsertTerm(location string, term string, wordcount int, postid int, posted string) {
+func InsertTerm(location string, term string, wordcount int, postid int, posted time.Time) {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted, location) VALUES($1,$2,$3,$4,$5) returning uid;", postid, term, wordcount, posted, location).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted, location) VALUES($1,$2,$3,$4,$5) returning uid;", postid, term, wordcount, posted.Format(time.RFC3339), location).Scan(&lastInsertId)
     checkErr(err)
 }
 
-func InsertPost(location string, sourceURI string, createdAt string) int {
+func InsertPost(location string, sourceURI string, createdAt time.Time) int {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, datetime.Format(time.RFC3339), createdAt, sourceURI).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, datetime.Format(time.RFC3339), createdAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
     checkErr(err)
 
     return lastInsertId
@@ -219,6 +221,14 @@ func QueryMiners() *sql.Rows {
 
     return rows
 }
+
+func QueryMinerForId(minerId string) *sql.Rows {
+    rows, err := db.Query("SELECT * FROM miners WHERE uid=$1", minerId)
+    checkErr(err)
+
+    return rows
+}
+
 
 func QueryTerms(location string, term string, fromDate string, interval int) *sql.Rows {
     t, err := time.Parse("20060102", fromDate)

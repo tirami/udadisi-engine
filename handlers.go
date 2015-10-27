@@ -70,6 +70,23 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
 
   fmt.Println("Post from Miner Id: ", posts.MinerId)
 
+  var miner Miner
+  rows := QueryMinerForId(posts.MinerId)
+  for rows.Next() {
+    var uid int
+    var name string
+    var location string
+    var url string
+    err := rows.Scan(&uid, &name, &location, &url)
+    checkErr(err)
+    miner = Miner {
+      Uid: uid,
+      Name: name,
+      Location: location,
+      Url: url,
+    }
+  }
+
   for _, post := range posts.Posts {
     url := post.Url
     posted := post.Datetime
@@ -78,9 +95,12 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
     fmt.Println("Posted ", posted)
     fmt.Println("Mined ", mined)
     fmt.Println("Terms and their counts")
+
+    lastInsertId := InsertPost(miner.Location, url, posted.Time)
     for k, v := range post.Terms {
-            fmt.Println(k, v)
-        }
+      fmt.Println(k, v)
+      InsertTerm(miner.Location, k, v, lastInsertId, posted.Time)
+    }
   }
 }
 
@@ -184,7 +204,7 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
 }
 
 func BuildLocationsList() Locations {
-  seeds := SeedsCollection()
+  miners := MinersCollection()
   locations := Locations{}
   locationsAdded := map[string]Location {}
 
@@ -195,12 +215,12 @@ func BuildLocationsList() Locations {
   locations = append(locations, allLocations)
 
   locationsAdded["all"] = allLocations
-  for _, seed := range seeds {
-    if _, exists := locationsAdded[seed.Location]; !exists {
-        locationsAdded[seed.Location] = Location{
-          Name: seed.Location,
+  for _, miner := range miners {
+    if _, exists := locationsAdded[miner.Location]; !exists {
+        locationsAdded[miner.Location] = Location{
+          Name: miner.Location,
         }
-        locations = append(locations, locationsAdded[seed.Location])
+        locations = append(locations, locationsAdded[miner.Location])
       }
   }
 
@@ -512,6 +532,7 @@ func MinersCollection() Miners {
     err := rows.Scan(&uid, &name, &location, &url)
     checkErr(err)
     miner := Miner {
+      Uid: uid,
       Name: name,
       Location: location,
       Url: url,
