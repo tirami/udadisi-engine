@@ -4,8 +4,10 @@
         "version": "0.0.1",
         "title": "Udadisi"
     },
+    "host": "localhost:8080",
+    "basePath": "/v1",
     "paths": {
-        "/v1/locations": {
+        "/locations": {
             "get": {
                 "description": "Gets 'Location' objects.\n",
                 "responses": {
@@ -28,7 +30,7 @@
                 }
             }
         },
-        "/v1/locations/{location}/stats": {
+        "/locations/{location}/stats": {
             "get": {
                 "description": "Gets `Stats` object.\n",
                 "parameters": [
@@ -57,7 +59,7 @@
                 }
             }
         },
-        "/v1/locations/{location}/trends": {
+        "/locations/{location}/trends": {
             "get": {
                 "description": "Gets `WordCount` objects.\nOptional query param of **limit** determins top number of word counts returned\n",
                 "parameters": [
@@ -100,7 +102,7 @@
                 }
             }
         },
-        "/v1/locations/{location}/trends/{term}": {
+        "/locations/{location}/trends/{term}": {
             "get": {
                 "description": "Gets `Trend` objects.\nOptional query param of **velocity** determines\nminimum velocity of trends returned\n",
                 "parameters": [
