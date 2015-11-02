@@ -1,27 +1,31 @@
-<a href="/">Home</a>
+<a href="/admin/">Admin Home</a>
 <h1>{{.Title}}</h1>
 
-<form action="miner" method="post">
-	Name:<br><input type="text" name="name"><br>
-	URL:<br><input type="text" name="url"><br>
-	Location:<br><input type="text" name="location"><br>
-	<input type="submit" value="Submit">
-</form>
+{{ if .Error }}
+	<p>{{.Error}}</p>
+{{ else }}
+	<form action="miner" method="post">
+		Name:<br><input type="text" name="name"><br>
+		URL:<br><input type="text" name="url"><br>
+		Location:<br><input type="text" name="location"><br>
+		<input type="submit" value="Submit">
+	</form>
 
-<table>
-	<tr>
-		<th>Name</th>
-		<th>Location</th>
-		<th>Url</th>
-		<th>Id</th>
-	</tr>
-{{range $miner := .Miners}}
-	<tr>
-		<td>{{$miner.Name}}</td>
-		<td>{{$miner.Location}}</td>
-		<td>{{$miner.Url}}</td>
-		<td>{{$miner.Uid}}</td>
-		<td><a href="{{$miner.Url}}/settings">Configure</a></td>
-	</tr>
-{{end}}
-</table>
+	<table>
+		<tr>
+			<th>Name</th>
+			<th>Location</th>
+			<th>Url</th>
+			<th>Id</th>
+		</tr>
+	{{range $miner := .Miners}}
+		<tr>
+			<td>{{$miner.Name}}</td>
+			<td>{{$miner.Location}}</td>
+			<td>{{$miner.Url}}</td>
+			<td>{{$miner.Uid}}</td>
+			<td><a href="{{$miner.Url}}/settings">Configure</a></td>
+		</tr>
+	{{end}}
+	</table>
+{{ end }}

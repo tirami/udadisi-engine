@@ -56,6 +56,18 @@ const (
     TWITTER_ACCESS_TOKEN_SECRET = "zXngb9iZ4rsugWHpgkZHYRtIo2qAQs7dBrsfn0kLiKQJP"
 )
 
+
+// A DatabaseError indicates an error with the database
+type DatabaseError struct {
+    Error error  // The raw error that precipitated this error, if any.
+}
+
+// String returns a human-readable error message.
+func (e *DatabaseError) String() string {
+    return fmt.Sprintf("%s", e.Error)
+}
+
+
 func BuildDatabase() {
 
     DropTable(DROP[Posts])
@@ -215,11 +227,21 @@ func InsertPost(location string, sourceURI string, createdAt time.Time) int {
     return lastInsertId
 }
 
-func QueryMiners() *sql.Rows {
-    rows, err := db.Query("SELECT * FROM miners")
-    checkErr(err)
+func QueryMiners() (rows *sql.Rows, err error) {
 
-    return rows
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
+    rows, errDb := db.Query("SELECT * FROM miners")
+    checkErr(errDb)
+    return
 }
 
 func QueryMinerForId(minerId string) *sql.Rows {
@@ -230,7 +252,17 @@ func QueryMinerForId(minerId string) *sql.Rows {
 }
 
 
-func QueryTerms(location string, term string, fromDate string, interval int) *sql.Rows {
+func QueryTerms(location string, term string, fromDate string, interval int) (rows *sql.Rows, err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
     t, err := time.Parse("20060102", fromDate)
     if err != nil {
         fmt.Errorf("invalid date: %v", err)
@@ -239,16 +271,14 @@ func QueryTerms(location string, term string, fromDate string, interval int) *sq
     if interval > 0 {
         toDate := t.Add(time.Duration(interval) * time.Hour * 24)
 
-        rows, err := db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", t.Format(time.RFC3339), toDate.Format(time.RFC3339), term, location)
+        rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", t.Format(time.RFC3339), toDate.Format(time.RFC3339), term, location)
         checkErr(err)
-        return rows
+        return
     } else {
-        rows, err := db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($1) || '%' AND posted > $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", location, t.Format(time.RFC3339), term)
+        rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($1) || '%' AND posted > $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", location, t.Format(time.RFC3339), term)
         checkErr(err)
-        return rows
+        return
     }
-
-
 }
 
 func QueryTermsForPost(postid int) *sql.Rows {
@@ -316,6 +346,6 @@ func DeletePost(db *sql.DB, uid int) {
 
 func checkErr(err error) {
     if err != nil {
-        panic(err)
+        panic(&DatabaseError{err})
     }
 }
