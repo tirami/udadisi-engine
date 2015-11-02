@@ -14,27 +14,16 @@ import (
 func Index(w http.ResponseWriter, r *http.Request) {
   w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
 
-  fmt.Fprintf(w, "<h1>Welcome to the Udadisi Engine</h1>")
-
-  locations := BuildLocationsList()
-  fmt.Fprintf(w, "<h2>Locations</h2>")
-  fmt.Fprintf(w, "<p>Select a location to view trends for.</p>")
-  fmt.Fprintf(w, "<ul>")
-  for _, location := range locations {
-    fmt.Fprintf(w, "<li>%s</li>", location.Name)
-    fmt.Fprintf(w, "<ul>")
-    fmt.Fprintf(w, "<li><a href=\"web/trends/%s\">All words</a></li>", location.Name)
-    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?limit=10\">Top 10 words</a></li>", location.Name)
-    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?from=20150826\">All words posted from 26th August 2015</a></li>", location.Name)
-    fmt.Fprintf(w, "<li><a href=\"web/trends/%s?from=20150821&interval=3\">All words posted within 3 days from 21st August 2015</a></li>", location.Name)
-    fmt.Fprintf(w, "</ul>")
+  locations, err := BuildLocationsList()
+  
+  content := make(map[string]interface{})
+  content["Title"] = "Welcome to the Udadisi Engine"
+  if err != nil {
+    content["Error"] = "Miners database table not yet created"
+  } else {
+    content["Locations"] = locations
   }
-  fmt.Fprintf(w, "</ul>")
-
-  fmt.Fprintf(w, "<h2>API Docs</h2>")
-  fmt.Fprintf(w, "<a href=\"http://developer.udadisi.com\">http://developer.udadisi.com</a>")
-
-  fmt.Fprintf(w, "<p><a href=\"/admin/\">Admin Home</a></p>")
+  renderTemplate(w, "index", content)
 }
 
 func AdminIndex(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +167,8 @@ func RenderLocationsJSON(w http.ResponseWriter, r *http.Request) {
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")
   w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
-  json.NewEncoder(w).Encode(BuildLocationsList())
+  locations, _ := BuildLocationsList()
+  json.NewEncoder(w).Encode(locations)
 }
 
 func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
@@ -206,9 +196,9 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(stats)
 }
 
-func BuildLocationsList() Locations {
-  miners, _ := MinersCollection()
-  locations := Locations{}
+func BuildLocationsList() (locations Locations, err error) {
+  miners, err := MinersCollection()
+  locations = Locations{}
   locationsAdded := map[string]Location {}
 
   // Add the default 'all' location
@@ -227,7 +217,7 @@ func BuildLocationsList() Locations {
       }
   }
 
-  return locations
+  return
 }
 
 func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
