@@ -7,6 +7,8 @@ import (
   "encoding/json"
   "strconv"
   "html/template"
+  "bytes"
+  "io/ioutil"
 
   "github.com/gorilla/mux"
 )
@@ -116,7 +118,26 @@ func AdminCreateMiner(w http.ResponseWriter, r *http.Request) {
   name := r.PostFormValue("name")
   url := r.PostFormValue("url")
   location := r.PostFormValue("location")
-  InsertMiner(name, location, url)
+  lastInsertId, err := InsertMiner(name, location, url)
+  sendIdUrl := fmt.Sprintf("%s/id", url)
+  idData := fmt.Sprintf("{\"id\":\"%d\"}", lastInsertId)
+
+  var jsonStr = []byte(idData)
+    req, err := http.NewRequest("POST", sendIdUrl, bytes.NewBuffer(jsonStr))
+    req.Header.Set("Content-Type", "application/json")
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    fmt.Println("response Status:", resp.Status)
+    fmt.Println("response Headers:", resp.Header)
+    body, _ := ioutil.ReadAll(resp.Body)
+    fmt.Println("response Body:", string(body))
+
 
   AdminMiners(w, r)
 }

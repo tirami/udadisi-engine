@@ -131,10 +131,21 @@ func UpdatePost() {
     */
 }
 
-func InsertMiner(name string, location string, url string) {
-    var lastInsertId int
-    err := db.QueryRow("INSERT INTO miners (name, location, url) VALUES($1,$2,$3) returning uid;", name, location, url).Scan(&lastInsertId)
+func InsertMiner(name string, location string, url string) (lastInsertId int, err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+    
+    err = db.QueryRow("INSERT INTO miners (name, location, url) VALUES($1,$2,$3) returning uid;", name, location, url).Scan(&lastInsertId)
     checkErr(err)
+
+    return
 }
 
 func InsertSeed(miner string, location string, source string) {
