@@ -7,9 +7,6 @@ or if you already have an older version installed
 
     go get -u github.com/tirami/udadisi-engine
 
-### Startup Issues
-The default homepage is populated with content from the database. If the database is not the correct version then it will crash. If this happens then follow the Configuring and Populating Server instructions below.
-
 ### Configuring and Populating Server
 
 1. Go to localhost:8080/admin
