@@ -244,7 +244,7 @@ func QueryMiners() (rows *sql.Rows, err error) {
     return
 }
 
-func QueryMinerForId(minerId string) *sql.Rows {
+func QueryMinerForId(minerId int) *sql.Rows {
     rows, err := db.Query("SELECT * FROM miners WHERE uid=$1", minerId)
     checkErr(err)
 

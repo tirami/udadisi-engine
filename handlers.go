@@ -58,6 +58,7 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
   }
 
   fmt.Println("Post from Miner Id: ", posts.MinerId)
+  fmt.Println(posts)
 
   var miner Miner
   rows := QueryMinerForId(posts.MinerId)
