@@ -91,24 +91,6 @@ var routes = Routes{
         AdminBuildDatabase,
     },
     Route{
-        "AdminBuildData",
-        "GET",
-        "/admin/builddata",
-        AdminBuildData,
-    },
-    Route{
-        "AdminBuildSeeds",
-        "GET",
-        "/admin/buildseeds",
-        AdminBuildSeeds,
-    },
-    Route{
-        "AdminSeeds",
-        "GET",
-        "/admin/seeds",
-        AdminSeeds,
-    },
-    Route{
         "AdminMiners",
         "GET",
         "/admin/miners",

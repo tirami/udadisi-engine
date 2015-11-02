@@ -130,40 +130,6 @@ func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
 }
 
-func AdminBuildSeeds(w http.ResponseWriter, r *http.Request) {
-
-  BuildSeeds()
-
-  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
-  fmt.Fprintf(w, "<p>Seeds set</p>")
-  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
-}
-
-func AdminBuildData(w http.ResponseWriter, r *http.Request) {
-
-  BuildWithTweets()
-
-  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
-  fmt.Fprintf(w, "<p>Data built</p>")
-  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
-}
-
-func AdminSeeds(w http.ResponseWriter, r *http.Request) {
-
-  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
-
-  fmt.Fprintf(w, "<h1>Seeds</h1>")
-
-  seeds := SeedsCollection()
-
-  fmt.Fprintf(w, "<ul>")
-
-  for _, seed := range seeds {
-    fmt.Fprintf(w, "<li>%s - %s - %s</li>", seed.Miner, seed.Location, seed.Source)
-  }
-  fmt.Fprintf(w, "</ul>")
-}
-
 func RenderLocationsJSON(w http.ResponseWriter, r *http.Request) {
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")

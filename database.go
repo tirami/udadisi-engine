@@ -9,8 +9,6 @@ import (
     "time"
     "bytes"
     "os"
-    "github.com/ChimeraCoder/anaconda"
-    "net/url"
 )
 
 const (
@@ -39,7 +37,6 @@ var datetime = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 var CREATE = map[int]string{
     Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text, location text)",
     Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone, location text)",
-    SeedsTable: "CREATE TABLE IF NOT EXISTS seeds(uid serial NOT NULL, minertype text, location text, source text)",
     MinersTable: "CREATE TABLE IF NOT EXISTS miners(uid serial NOT NULL, name text, location text, url text)",
 }
 
@@ -49,12 +46,6 @@ var DROP = map[int]string{
     SeedsTable: "DROP TABLE IF EXISTS seeds",
 }
 
-const (
-    TWITTER_CONSUMER_KEY = "nPHuNmCFnYGAJQgr0fwB571bc"
-    TWITTER_CONSUMER_SECRET = "5Xd8A5WcmP8avrKwlGKsaaLQiHspe87Qiz68AxSWQ83iARieJl"
-    TWITTER_ACCESS_TOKEN = "3417359543-fss1uvyGrPc9k3GpfewWBF7EZaXm8Tw8c8boN6C"
-    TWITTER_ACCESS_TOKEN_SECRET = "zXngb9iZ4rsugWHpgkZHYRtIo2qAQs7dBrsfn0kLiKQJP"
-)
 
 
 // A DatabaseError indicates an error with the database
@@ -76,69 +67,8 @@ func BuildDatabase() {
     DropTable(DROP[MinersTable])
     CreateTable(CREATE[Posts])
     CreateTable(CREATE[Terms])
-    CreateTable(CREATE[SeedsTable])
     CreateTable(CREATE[MinersTable])
 }
-
-func BuildSeeds() {
-    InsertSeed("twitter", "Dhaka", "a2ztechnews")
-    InsertSeed("twitter", "Scotland", "symboticaandrew")
-    InsertSeed("twitter", "Scotland", "digitalwestie")
-    InsertSeed("twitter", "Scotland", "pluginadventure")
-    InsertSeed("twitter", "UK", "pluginadventure")
-    InsertSeed("twitter", "UK", "kickstarter")
-}
-
-func BuildWithTweets() {
-    // Seed with some sample data
-    fmt.Println("# Populating with seed data...")
-    anaconda.SetConsumerKey(TWITTER_CONSUMER_KEY)
-    anaconda.SetConsumerSecret(TWITTER_CONSUMER_SECRET)
-
-    rows := QuerySeeds()
-    for rows.Next() {
-        var uid int
-        var miner string
-        var location string
-        var source string
-        err := rows.Scan(&uid, &miner, &location, &source)
-        checkErr(err)
-
-        PopulateWithTweets(location, source)
-    }
-
-    fmt.Println("# Populated")
-}
-
-func PopulateWithTweets(location string, user string) {
-    api := anaconda.NewTwitterApi(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
-
-    v := url.Values{}
-    v.Set("screen_name", user)
-    v.Set("count", "200")
-    timeline, _ := api.GetUserTimeline(v)
-    for _ , tweet := range timeline {
-        tweetUrl := fmt.Sprintf("https://twitter.com/%s/status/%s", user, tweet.IdStr)
-        AddTweet(location, tweetUrl, tweet.Text, tweet.CreatedAt)
-    }
-}
-
-func AddTweet(location string, address string, contents string, createdAt string) {
-    /*
-    lastInsertId := InsertPost(location, address, createdAt)
-
-    reg, err := regexp.Compile("[^A-Za-z @]+")
-    if err != nil {
-        fmt.Println("%s", err)
-    }
-    cleanedContent := reg.ReplaceAllString(strings.ToLower(string(contents)), "")
-    wordCounts := CountWords(cleanedContent)
-    for k, v := range wordCounts {
-      InsertTerm(location, k, v, lastInsertId, createdAt)
-    }
-    */
-}
-
 
 func CountWords(s string) map[string]int {
   counts := make(map[string]int)
