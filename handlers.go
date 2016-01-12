@@ -322,6 +322,7 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   fromParam := r.URL.Query().Get("from")
   wordCounts := WordCountRootCollection(location, fromParam, int(interval))
 
+  fmt.Fprintf(w, "<html><head><link href=\"/css/bootstrap.min.css\" rel=\"stylesheet\"></head><body><div class=\"container-fluid\">")
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
   fmt.Fprintf(w, "<h1>Main index</h1>")
 
@@ -345,6 +346,8 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   }
 
   DisplayRootCount(w, location, fromParam, int(interval), sortedCounts)
+
+  fmt.Fprintf(w, "</div></body></html>")
 }
 
 func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
@@ -358,6 +361,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
 
   trends := TrendsCollection(location, term, fromParam, interval, 1.0, 0.0)
 
+fmt.Fprintf(w, "<html><head><link href=\"/css/bootstrap.min.css\" rel=\"stylesheet\"></head><body><div class=\"container-fluid\">")
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
   fmt.Fprintf(w, "<h1><a href=\"../%s\">Main index</a></h1>", location)
 
@@ -393,18 +397,22 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   }
 
   DisplayCount(w, fromParam, interval, thisTerm, totalCounts, sources)
+  fmt.Fprintf(w, "</div></body></html>")
 }
 
 func DisplayRootCount(w http.ResponseWriter, location string, fromParam string, interval int, totalCounts WordCounts) {
-  fmt.Fprintf(w, "(%d terms)", len(totalCounts))
+  fmt.Fprintf(w, "<h2>%d terms</h2>", len(totalCounts))
+  fmt.Fprintf(w, "<div class=\"row\"><div class=\"col-md-4\">")
+  fmt.Fprintf(w, "<ul class=\"list-group\">")
   for _, res := range totalCounts {
-    fmt.Fprintf(w, "<li><a href=\"%s/%s?from=%s&interval=%d\">%s</a> : %d</li>",
+    fmt.Fprintf(w, "<li class=\"list-group-item\"><a href=\"%s/%s?from=%s&interval=%d\">%s</a> <span class=\"badge\">%d</span></li>",
       location,
       res.Term,
       fromParam,
       interval,
       res.Term, res.Occurrences)
   }
+  fmt.Fprintf(w, "</ul></div></div>")
 }
 
 func BuildTrendsJSON(term string, totalCounts map[string]int, sources Sources, velocityInterval float64) TermTrend {
