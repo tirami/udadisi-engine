@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container-fluid">
+      <a href="/">Home</a>
+      <h1>{{.Title}}</h1>
+      <h2>{{len .SortedCounts}}</h2>
+      <div class="row">
+        <div class="col-md-3">
+          <ul class="list-group">
+            {{$location := .Location}}
+            {{$fromParam := .FromParam}}
+            {{$interval := .Interval}}
+            {{range $count := .SortedCounts}}
+              <li class="list-group-item">
+                <a href="{{$location}}/{{$count.Term}}?from={{$fromParam}}&interval={{$interval}}">{{$count.Term}}</a>
+                <span class="badge">{{$count.Occurrences}}</span>
+              </li>
+            {{end}}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

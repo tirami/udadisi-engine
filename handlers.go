@@ -322,10 +322,6 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   fromParam := r.URL.Query().Get("from")
   wordCounts := WordCountRootCollection(location, fromParam, int(interval))
 
-  fmt.Fprintf(w, "<html><head><link href=\"/css/bootstrap.min.css\" rel=\"stylesheet\"></head><body><div class=\"container-fluid\">")
-  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
-  fmt.Fprintf(w, "<h1>Main index</h1>")
-
   totalCounts := map[string]int {}
 
   for _, wordcount := range wordCounts {
@@ -345,9 +341,14 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
     }
   }
 
-  DisplayRootCount(w, location, fromParam, int(interval), sortedCounts)
+  content := make(map[string]interface{})
+  content["Title"] = "Main Index"
+  content["Location"] = location
+  content["FromParam"] = fromParam
+  content["Interval"] = int(interval)
+  content["SortedCounts"] = sortedCounts
 
-  fmt.Fprintf(w, "</div></body></html>")
+  renderTemplate(w, "termsindex", content)
 }
 
 func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
