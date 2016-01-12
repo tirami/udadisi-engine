@@ -7,12 +7,11 @@ import (
   "encoding/json"
   "strconv"
   "html/template"
-  "bytes"
-  "io/ioutil"
 
   "github.com/gorilla/mux"
 )
 
+// Main home page
 func Index(w http.ResponseWriter, r *http.Request) {
   w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
 
@@ -28,131 +27,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
   renderTemplate(w, "index", content)
 }
 
-func AdminIndex(w http.ResponseWriter, r *http.Request) {
-  content := make(map[string]interface{})
-  content["Title"] = "Admin Home Page"
-  renderTemplate(w, "admin/index", content)
-}
-
-func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]interface{}) {
-  t, err := template.ParseFiles("views/" + tmpl + ".html")
-
-  if err != nil {
-    fmt.Println("%s", err)
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    return
-  }
-
-  err = t.Execute(w, content)
-  if err != nil {
-    fmt.Println("%s", err)
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-  }
-}
-
-func MinerPost(w http.ResponseWriter, r *http.Request) {
-  decoder := json.NewDecoder(r.Body)
-
-  var posts MinerPostsJSON
-  err := decoder.Decode(&posts)
-  if err != nil {
-    fmt.Println("Error:", err)
-  }
-
-  fmt.Println("Post from Miner Id: ", posts.MinerId)
-  fmt.Println(posts)
-
-  var miner Miner
-  rows := QueryMinerForId(posts.MinerId)
-  for rows.Next() {
-    var uid int
-    var name string
-    var location string
-    var url string
-    err := rows.Scan(&uid, &name, &location, &url)
-    checkErr(err)
-    miner = Miner {
-      Uid: uid,
-      Name: name,
-      Location: location,
-      Url: url,
-    }
-  }
-
-  for _, post := range posts.Posts {
-    url := post.Url
-    posted := post.Datetime
-    mined := post.MinedAt
-    fmt.Println("SourceURI ", url)
-    fmt.Println("Posted ", posted)
-    fmt.Println("Mined ", mined)
-    fmt.Println("Terms and their counts")
-
-    lastInsertId := InsertPost(miner.Location, url, posted.Time, mined.Time)
-    if lastInsertId != 0 {
-      for k, v := range post.Terms {
-        fmt.Println(k, v)
-        InsertTerm(miner.Location, k, v, lastInsertId, posted.Time)
-      }
-    }
-  }
-}
-
-func AdminMiners(w http.ResponseWriter, r *http.Request) {
-  miners, err :=  MinersCollection()
-  content := make(map[string]interface{})
-
-  content["Title"] = "Admin Miners"
-  if err != nil {
-    content["Error"] = "Miners database table not yet created"
-  } else {
-    content["Miners"] = miners
-  }
-  renderTemplate(w, "admin/miners/index", content)
-}
-
-func AdminCreateMiner(w http.ResponseWriter, r *http.Request) {
-  err := r.ParseForm()
-  if err != nil {
-    fmt.Println(err)
-  }
-
-  name := r.PostFormValue("name")
-  url := r.PostFormValue("url")
-  location := r.PostFormValue("location")
-  lastInsertId, err := InsertMiner(name, location, url)
-  sendIdUrl := fmt.Sprintf("%s/id", url)
-  idData := fmt.Sprintf("{\"id\":\"%d\"}", lastInsertId)
-
-  var jsonStr = []byte(idData)
-    req, err := http.NewRequest("POST", sendIdUrl, bytes.NewBuffer(jsonStr))
-    req.Header.Set("Content-Type", "application/json")
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        panic(err)
-    }
-    defer resp.Body.Close()
-
-    fmt.Println("response Status:", resp.Status)
-    fmt.Println("response Headers:", resp.Header)
-    body, _ := ioutil.ReadAll(resp.Body)
-    fmt.Println("response Body:", string(body))
-
-
-  AdminMiners(w, r)
-}
-
-func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
-
-  BuildDatabase()
-
-  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
-  fmt.Fprintf(w, "<p>Database built</p>")
-  fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
-}
-
+// Generates JSON list of locations
 func RenderLocationsJSON(w http.ResponseWriter, r *http.Request) {
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")
@@ -161,6 +36,7 @@ func RenderLocationsJSON(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(locations)
 }
 
+// Generates JSON stats for a location
 func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
@@ -186,31 +62,8 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(stats)
 }
 
-func BuildLocationsList() (locations Locations, err error) {
-  miners, err := MinersCollection()
-  locations = Locations{}
-  locationsAdded := map[string]Location {}
-
-  // Add the default 'all' location
-  allLocations := Location{
-    Name: "all",
-  }
-  locations = append(locations, allLocations)
-
-  locationsAdded["all"] = allLocations
-  for _, miner := range miners {
-    if _, exists := locationsAdded[miner.Location]; !exists {
-        locationsAdded[miner.Location] = Location{
-          Name: miner.Location,
-        }
-        locations = append(locations, locationsAdded[miner.Location])
-      }
-  }
-
-  return
-}
-
-func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
+// Generates JSON for root list of trends
+func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
   limitParam := r.URL.Query().Get("limit")
@@ -251,6 +104,7 @@ func TrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(sortedCounts)
 }
 
+// Generates JSON list of trends for a term
 func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
@@ -310,8 +164,31 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   json.NewEncoder(w).Encode(termTrends)
 }
 
+func BuildLocationsList() (locations Locations, err error) {
+  miners, err := MinersCollection()
+  locations = Locations{}
+  locationsAdded := map[string]Location {}
 
-// Web test stuff
+  // Add the default 'all' location
+  allLocations := Location{
+    Name: "all",
+  }
+  locations = append(locations, allLocations)
+
+  locationsAdded["all"] = allLocations
+  for _, miner := range miners {
+    if _, exists := locationsAdded[miner.Location]; !exists {
+        locationsAdded[miner.Location] = Location{
+          Name: miner.Location,
+        }
+        locations = append(locations, locationsAdded[miner.Location])
+      }
+  }
+
+  return
+}
+
+// Diagonistic web pages
 func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
@@ -397,6 +274,17 @@ fmt.Fprintf(w, "<html><head><link href=\"/css/bootstrap.min.css\" rel=\"styleshe
     }
   }
 
+/*
+  content := make(map[string]interface{})
+  content["Title"] = "Main Index"
+  content["FromParam"] = fromParam
+  content["Interval"] = int(interval)
+  content["Term"] = thisTerm
+  content["Sources"] = sources
+
+  renderTemplate(w, "termsindex", content)
+  */
+
   DisplayCount(w, fromParam, interval, thisTerm, totalCounts, sources)
   fmt.Fprintf(w, "</div></body></html>")
 }
@@ -462,6 +350,22 @@ func DisplayCount(w http.ResponseWriter, fromParam string, interval int, term st
 
 
 // Internal stuff
+func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]interface{}) {
+  t, err := template.ParseFiles("views/" + tmpl + ".html")
+
+  if err != nil {
+    fmt.Println("%s", err)
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+
+  err = t.Execute(w, content)
+  if err != nil {
+    fmt.Println("%s", err)
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+  }
+}
+
 func SeedsCollection() Seeds {
   seeds := Seeds {}
 

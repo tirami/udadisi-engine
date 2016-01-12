@@ -62,10 +62,10 @@ var routes = Routes{
         TrendsIndex,
     },
     Route{
-        "TrendsRouteIndex",
+        "TrendsRootIndex",
         "GET",
         "/v1/locations/{location}/trends",
-        TrendsRouteIndex,
+        TrendsRootIndex,
     },
     Route{
         "WebTrendsIndex",
