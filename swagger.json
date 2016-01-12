@@ -74,7 +74,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "top number of word counts to return",
+                        "description": "top number of word counts to return, defaults to 10",
                         "required": false,
                         "type": "integer"
                     },
@@ -88,7 +88,7 @@
                     {
                         "name": "interval",
                         "in": "query",
-                        "description": "time interval to include post from from date",
+                        "description": "number of periods to divide time range by, defaults to 2",
                         "required": false,
                         "type": "string"
                     }
@@ -113,6 +113,13 @@
                                         "type": "number",
                                         "format": "float",
                                         "description": "Value calculated on number of occurances divided by time period"
+                                    },
+                                    "series": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "description": "Occurrences for each interval"
+                                        }
                                     }
                                 }
                             }
