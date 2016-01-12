@@ -17,7 +17,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
   w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
 
   locations, err := BuildLocationsList()
-  
+
   content := make(map[string]interface{})
   content["Title"] = "Welcome to the Udadisi Engine"
   if err != nil {
@@ -89,9 +89,11 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
     fmt.Println("Terms and their counts")
 
     lastInsertId := InsertPost(miner.Location, url, posted.Time)
-    for k, v := range post.Terms {
-      fmt.Println(k, v)
-      InsertTerm(miner.Location, k, v, lastInsertId, posted.Time)
+    if lastInsertId != 0 {
+      for k, v := range post.Terms {
+        fmt.Println(k, v)
+        InsertTerm(miner.Location, k, v, lastInsertId, posted.Time)
+      }
     }
   }
 }

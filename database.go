@@ -141,7 +141,7 @@ func InsertMiner(name string, location string, url string) (lastInsertId int, er
             }
         }
     }()
-    
+
     err = db.QueryRow("INSERT INTO miners (name, location, url) VALUES($1,$2,$3) returning uid;", name, location, url).Scan(&lastInsertId)
     checkErr(err)
 
@@ -161,9 +161,16 @@ func InsertTerm(location string, term string, wordcount int, postid int, posted 
 }
 
 func InsertPost(location string, sourceURI string, createdAt time.Time) int {
-    var lastInsertId int
-    err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, datetime.Format(time.RFC3339), createdAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
-    checkErr(err)
+    lastInsertId := 0
+
+    // Check to see if we already have an entry for the sourceURI
+    duplicate := false
+    db.QueryRow("SELECT 1 FROM posts WHERE sourceURI=$1", sourceURI).Scan(&duplicate)
+
+    if duplicate == false {
+       err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, datetime.Format(time.RFC3339), createdAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
+        checkErr(err)
+    }
 
     return lastInsertId
 }
