@@ -165,7 +165,7 @@ func InsertPost(location string, sourceURI string, createdAt time.Time) int {
 
     // Check to see if we already have an entry for the sourceURI
     duplicate := false
-    db.QueryRow("SELECT 1 FROM posts WHERE sourceURI=$1", sourceURI).Scan(&duplicate)
+    db.QueryRow("SELECT 1 FROM posts WHERE sourceURI=$1 AND location=$2", sourceURI, location).Scan(&duplicate)
 
     if duplicate == false {
        err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, datetime.Format(time.RFC3339), createdAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
