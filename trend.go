@@ -30,6 +30,7 @@ type Source struct {
   Source string `json:"source"`
   SourceURI string `json:"source_uri"`
   Posted time.Time `json:"posted"`
+  Mined time.Time `json:"mined"`
 }
 
 type Sources []Source

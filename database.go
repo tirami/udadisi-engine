@@ -160,7 +160,7 @@ func InsertTerm(location string, term string, wordcount int, postid int, posted 
     checkErr(err)
 }
 
-func InsertPost(location string, sourceURI string, createdAt time.Time) int {
+func InsertPost(location string, sourceURI string, postedAt time.Time, minedAt time.Time) int {
     lastInsertId := 0
 
     // Check to see if we already have an entry for the sourceURI
@@ -168,7 +168,7 @@ func InsertPost(location string, sourceURI string, createdAt time.Time) int {
     db.QueryRow("SELECT 1 FROM posts WHERE sourceURI=$1 AND location=$2", sourceURI, location).Scan(&duplicate)
 
     if duplicate == false {
-       err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, datetime.Format(time.RFC3339), createdAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
+       err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, minedAt.Format(time.RFC3339), postedAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
         checkErr(err)
     }
 

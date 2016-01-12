@@ -88,7 +88,7 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
     fmt.Println("Mined ", mined)
     fmt.Println("Terms and their counts")
 
-    lastInsertId := InsertPost(miner.Location, url, posted.Time)
+    lastInsertId := InsertPost(miner.Location, url, posted.Time, mined.Time)
     if lastInsertId != 0 {
       for k, v := range post.Terms {
         fmt.Println(k, v)
@@ -381,6 +381,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
       Source: "Twitter",
       SourceURI: trend.SourceURI,
       Posted: trend.Posted,
+      Mined: trend.Mined,
     }
     sources = append(sources, source)
 
@@ -442,8 +443,9 @@ func DisplayCount(w http.ResponseWriter, fromParam string, interval int, term st
 
   fmt.Fprintf(w, "<h3>Sources</h3>")
   for _, source := range sources {
-    fmt.Fprintf(w, "<li>%s : %s : <a href=\"%s\" target=\"_new\">%s</a></li>",
+    fmt.Fprintf(w, "<li>%s : mined %s : posted %s <a href=\"%s\" target=\"_new\">%s</a></li>",
       source.Source,
+      source.Mined,
       source.Posted,
       source.SourceURI, source.SourceURI)
   }
