@@ -111,6 +111,18 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
       velocityInterval = 1.0
     }
 
+  t := time.Now()
+  if fromParam == "" {
+    from := t.Add(-24 * time.Hour)
+    fromParam = from.Format("200601021504")
+  }
+  if toParam == "" {
+    toParam = t.Format("200601021504")
+  }
+  if interval < 1 {
+    interval = 2
+  }
+
   trends := TrendsCollection(location, term, fromParam, toParam, interval, velocityInterval, minimumVelocity)
 
   last_trend_term := ""
@@ -220,6 +232,17 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   intervalParam := r.URL.Query().Get("interval")
   intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
   interval := int(intervalConv)
+  t := time.Now()
+  if fromParam == "" {
+    from := t.Add(-24 * time.Hour)
+    fromParam = from.Format("200601021504")
+  }
+  if toParam == "" {
+    toParam = t.Format("200601021504")
+  }
+  if interval < 1 {
+    interval = 2
+  }
 
   trends := TrendsCollection(location, term, fromParam, toParam, interval, 1.0, 0.0)
 
