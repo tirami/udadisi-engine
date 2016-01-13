@@ -15,10 +15,10 @@
       	{{range $location := .Locations}}
       		<li>{{$location.Name}}</li>
           	<ul>
-          	<li><a href="web/trends/{{$location.Name}}">All words</a></li>
-          	<li><a href="web/trends/{{$location.Name}}?limit=10">Top 10 words</a></li>
-          	<li><a href="web/trends/{{$location.Name}}?from=201508260000">All words posted from 26th August 2015</a></li>
-          	<li><a href="web/trends/{{$location.Name}}?from=20150821&interval=3">All words posted within 3 days from 21st August 2015</a></li>
+            	<li><a href="web/trends/{{$location.Name}}">All words in last 24 hours</a></li>
+            	<li><a href="web/trends/{{$location.Name}}?limit=10">Top 10 words in last 24 hours</a></li>
+              <li><a href="web/trends/{{$location.Name}}?&interval=24">All words in last 24 hours by hour</a></li>
+            	<li><a href="web/trends/{{$location.Name}}?from=201001010000">All words posted from 1st January 2010</a></li>
           	</ul>
       	{{end}}
       	</ul>

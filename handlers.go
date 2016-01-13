@@ -44,7 +44,7 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
   toParam := r.URL.Query().Get("to")
-  wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval))
+  wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval), 0)
 
   totalCounts := map[string]int {}
 
@@ -73,58 +73,18 @@ func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
   toParam := r.URL.Query().Get("to")
-  if interval == 0 {
+  t := time.Now()
+  if fromParam == "" {
+    from := t.Add(-24 * time.Hour)
+    fromParam = from.Format("200601021504")
+  }
+  if toParam == "" {
+    toParam = t.Format("200601021504")
+  }
+  if interval < 1 {
     interval = 2
   }
-  wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval))
-
-  totalCounts := map[string]int {}
-  serieses := map[string]map[int]int {}
-
-  for _, wordcount := range wordCounts {
-    count := totalCounts[wordcount.Term]
-    count = count + wordcount.Occurrences
-    totalCounts[wordcount.Term] = count
-    if val, ok := serieses[wordcount.Term]; ok {
-      if scount, ok := val[wordcount.Sequence]; ok {
-        val[wordcount.Sequence] = scount + 1
-      } else {
-        val[wordcount.Sequence] = 1
-      }
-    } else {
-      serieses[wordcount.Term] = map[int]int{}
-      serieses[wordcount.Term][wordcount.Sequence] = 1
-    }
-  }
-
-  seriesCounts := map[string][]int {}
-
-  for key, _ := range serieses {
-    fmt.Println(key)
-    seriesCounts[key] = make([]int, 0, len(serieses[key]))
-
-    for  _, value := range serieses[key] {
-      seriesCounts[key] = append(seriesCounts[key], value)
-    }
-  }
-
-  sortedCounts := WordCounts {}
-
-  velocityInterval := float64(interval)
-  if velocityInterval == 0.0 {
-    velocityInterval = 1.0
-  }
-
-  for _, res := range sortedKeys(totalCounts) {
-    if limit == 0 || len(sortedCounts) < int(limit) {
-      sortedCounts = append(sortedCounts, WordCount {
-                Term: res,
-                Occurrences: totalCounts[res],
-                Velocity: float64(totalCounts[res]) / velocityInterval,
-                Series: seriesCounts[res],
-              })
-    }
-  }
+  sortedCounts := WordCountRootCollection(location, fromParam, toParam, int(interval), int(limit))
 
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")
@@ -227,34 +187,24 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
   toParam := r.URL.Query().Get("to")
+  t := time.Now()
+  if fromParam == "" {
+    from := t.Add(-24 * time.Hour)
+    fromParam = from.Format("200601021504")
+  }
+  if toParam == "" {
+    toParam = t.Format("200601021504")
+  }
   if interval < 1 {
     interval = 2
   }
-  wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval))
-
-  totalCounts := map[string]int {}
-
-  for _, wordcount := range wordCounts {
-    count := totalCounts[wordcount.Term]
-    count = count + wordcount.Occurrences
-    totalCounts[wordcount.Term] = count
-  }
-
-  sortedCounts := WordCounts {}
-
-  for _, res := range sortedKeys(totalCounts) {
-    if limit == 0 || len(sortedCounts) < int(limit) {
-      sortedCounts = append(sortedCounts, WordCount {
-                Term: res,
-                Occurrences: totalCounts[res],
-              })
-    }
-  }
+  sortedCounts := WordCountRootCollection(location, fromParam, toParam, int(interval), int(limit))
 
   content := make(map[string]interface{})
   content["Title"] = "Main Index"
   content["Location"] = location
   content["FromParam"] = fromParam
+  content["ToParam"] = toParam
   content["Interval"] = int(interval)
   content["SortedCounts"] = sortedCounts
 
@@ -422,7 +372,7 @@ func SeedsCollection() Seeds {
   return seeds
 }
 
-func WordCountRootCollection(location string, fromParam string, toParam string, interval int) WordCounts {
+func WordCountRootCollection(location string, fromParam string, toParam string, interval int, limit int) WordCounts {
   wordCounts := WordCounts {}
 
   if location == "all" {
@@ -486,7 +436,36 @@ func WordCountRootCollection(location string, fromParam string, toParam string, 
     fromParam = fromTime.Format("200601021504")
  }
 
-  return wordCounts
+ totalCounts := map[string]int {}
+  serieses := map[string][]int {}
+
+  for _, wordcount := range wordCounts {
+    if _, ok := serieses[wordcount.Term]; ok {
+    } else {
+      serieses[wordcount.Term] = make([]int, int(interval))
+    }
+  }
+
+  for _, wordcount := range wordCounts {
+    count := totalCounts[wordcount.Term]
+    count = count + wordcount.Occurrences
+    totalCounts[wordcount.Term] = count
+    serieses[wordcount.Term][wordcount.Sequence] = serieses[wordcount.Term][wordcount.Sequence] + 1
+  }
+
+  sortedCounts := WordCounts {}
+
+  for _, res := range sortedKeys(totalCounts) {
+    if limit == 0 || len(sortedCounts) < int(limit) {
+      sortedCounts = append(sortedCounts, WordCount {
+                Term: res,
+                Occurrences: totalCounts[res],
+                Series: serieses[res],
+              })
+    }
+  }
+
+  return sortedCounts
 }
 
 func MinersCollection() (miners Miners, err error) {

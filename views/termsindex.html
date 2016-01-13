@@ -6,22 +6,31 @@
     <div class="container-fluid">
       <a href="/">Home</a>
       <h1>{{.Title}}</h1>
-      <h2>{{len .SortedCounts}}</h2>
-      <div class="row">
-        <div class="col-md-3">
-          <ul class="list-group">
-            {{$location := .Location}}
-            {{$fromParam := .FromParam}}
-            {{$interval := .Interval}}
-            {{range $count := .SortedCounts}}
-              <li class="list-group-item">
-                <a href="{{$location}}/{{$count.Term}}?from={{$fromParam}}&interval={{$interval}}">{{$count.Term}}</a>
-                <span class="badge">{{$count.Occurrences}}</span>
-              </li>
-            {{end}}
-          </ul>
-        </div>
-      </div>
+      <h2>{{.FromParam}} - {{.ToParam}} interval of {{.Interval}}</h2>
+      <h3>{{len .SortedCounts}} terms</h3>
+
+      {{$location := .Location}}
+      {{$fromParam := .FromParam}}
+      {{$interval := .Interval}}
+
+      <table class="table table-striped">
+        <tr>
+          <th></th>
+          <th>Term</th>
+          <th>Time series</th>
+        </tr>
+        {{range $count := .SortedCounts}}
+          <tr>
+            <td><span class="badge">{{$count.Occurrences}}</span></td>
+            <td><a href="{{$location}}/{{$count.Term}}?from={{$fromParam}}&interval={{$interval}}">{{$count.Term}}</a></td>
+            <td>
+              {{range $count.Series}}
+                {{.}},
+              {{end}}
+            </td>
+          </tr>
+        {{end}}
+      </table>
     </div>
   </body>
 </html>
