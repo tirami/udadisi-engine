@@ -156,7 +156,7 @@ func InsertSeed(miner string, location string, source string) {
 
 func InsertTerm(location string, term string, wordcount int, postid int, posted time.Time) {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted, location) VALUES($1,$2,$3,$4,$5) returning uid;", postid, term, wordcount, posted.Format(time.RFC3339), location).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted, location) VALUES($1,$2,$3,$4,$5) returning uid;", postid, strings.ToLower(term), wordcount, posted.Format(time.RFC3339), location).Scan(&lastInsertId)
     checkErr(err)
 }
 
