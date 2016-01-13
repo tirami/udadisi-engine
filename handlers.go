@@ -43,7 +43,8 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
-  wordCounts := WordCountRootCollection(location, fromParam, int(interval))
+  toParam := r.URL.Query().Get("to")
+  wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval))
 
   totalCounts := map[string]int {}
 
@@ -71,14 +72,40 @@ func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
-  wordCounts := WordCountRootCollection(location, fromParam, int(interval))
+  toParam := r.URL.Query().Get("to")
+  if interval == 0 {
+    interval = 2
+  }
+  wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval))
 
   totalCounts := map[string]int {}
+  serieses := map[string]map[int]int {}
 
   for _, wordcount := range wordCounts {
     count := totalCounts[wordcount.Term]
     count = count + wordcount.Occurrences
     totalCounts[wordcount.Term] = count
+    if val, ok := serieses[wordcount.Term]; ok {
+      if scount, ok := val[wordcount.Sequence]; ok {
+        val[wordcount.Sequence] = scount + 1
+      } else {
+        val[wordcount.Sequence] = 1
+      }
+    } else {
+      serieses[wordcount.Term] = map[int]int{}
+      serieses[wordcount.Term][wordcount.Sequence] = 1
+    }
+  }
+
+  seriesCounts := map[string][]int {}
+
+  for key, _ := range serieses {
+    fmt.Println(key)
+    seriesCounts[key] = make([]int, 0, len(serieses[key]))
+
+    for  _, value := range serieses[key] {
+      seriesCounts[key] = append(seriesCounts[key], value)
+    }
   }
 
   sortedCounts := WordCounts {}
@@ -94,6 +121,7 @@ func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
                 Term: res,
                 Occurrences: totalCounts[res],
                 Velocity: float64(totalCounts[res]) / velocityInterval,
+                Series: seriesCounts[res],
               })
     }
   }
@@ -112,17 +140,18 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
 
   termTrends := TermTrends {}
   fromParam := r.URL.Query().Get("from")
+  toParam := r.URL.Query().Get("to")
   velocityParam := r.URL.Query().Get("velocity")
   minimumVelocity, _ := strconv.ParseFloat(velocityParam, 64)
   intervalParam := r.URL.Query().Get("interval")
-  intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
+  intervalConv, _ := strconv.ParseInt(intervalParam, 10, 2)
   interval := int(intervalConv)
   velocityInterval := float64(interval)
     if velocityInterval == 0.0 {
       velocityInterval = 1.0
     }
 
-  trends := TrendsCollection(location, term, fromParam, interval, velocityInterval, minimumVelocity)
+  trends := TrendsCollection(location, term, fromParam, toParam, interval, velocityInterval, minimumVelocity)
 
   last_trend_term := ""
   totalCounts := map[string]int {}
@@ -197,7 +226,11 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
-  wordCounts := WordCountRootCollection(location, fromParam, int(interval))
+  toParam := r.URL.Query().Get("to")
+  if interval < 1 {
+    interval = 2
+  }
+  wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval))
 
   totalCounts := map[string]int {}
 
@@ -233,11 +266,12 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   location := vars["location"]
   term := vars["term"]
   fromParam := r.URL.Query().Get("from")
+  toParam := r.URL.Query().Get("to")
   intervalParam := r.URL.Query().Get("interval")
   intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
   interval := int(intervalConv)
 
-  trends := TrendsCollection(location, term, fromParam, interval, 1.0, 0.0)
+  trends := TrendsCollection(location, term, fromParam, toParam, interval, 1.0, 0.0)
 
 fmt.Fprintf(w, "<html><head><link href=\"/css/bootstrap.min.css\" rel=\"stylesheet\"></head><body><div class=\"container-fluid\">")
   fmt.Fprintf(w, "<a href=\"/\">Home</a>")
@@ -388,33 +422,69 @@ func SeedsCollection() Seeds {
   return seeds
 }
 
-func WordCountRootCollection(location string, fromParam string, interval int) WordCounts {
+func WordCountRootCollection(location string, fromParam string, toParam string, interval int) WordCounts {
   wordCounts := WordCounts {}
 
   if location == "all" {
     location = ""
   }
-  rows, err := QueryTerms(location, "", fromParam, interval)
 
+  t := time.Now()
+  if fromParam == "" {
+    from := t.Add(-24 * time.Hour)
+    fromParam = from.Format("200601021504")
+  }
+
+  if toParam == "" {
+    toParam = t.Format("200601021504")
+  }
+
+  fromTime, err := time.Parse("200601021504", fromParam)
   if err != nil {
+      fmt.Errorf("invalid from date: %v", err)
+  }
 
-  } else {
-    for rows.Next() {
-      var uid int
-      var postid int
-      var term string
-      var wordcount int
-      var posted time.Time
-      var termLocation string
-      err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation)
-      checkErr(err)
-      wordCount := WordCount {
-        Term: term,
-        Occurrences: wordcount,
+  toTime, err := time.Parse("200601021504", toParam)
+  if err != nil {
+      fmt.Errorf("invalid to date: %v", err)
+  }
+
+  duration := toTime.Sub(fromTime)
+  fmt.Println("duration ", duration.Minutes())
+  duration  = duration / time.Duration(interval)
+
+  for i := 0; i < interval; i++ {
+
+    toTime = fromTime.Add(duration)
+    toParam = toTime.Format("200601021504")
+
+    rows, err := QueryTerms(location, "", fromParam, toParam)
+
+    if err != nil {
+
+    } else {
+      for rows.Next() {
+        var uid int
+        var postid int
+        var term string
+        var wordcount int
+        var posted time.Time
+        var termLocation string
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation)
+        checkErr(err)
+        wordCount := WordCount {
+          Term: term,
+          Occurrences: wordcount,
+          Series: []int{wordcount},
+          Sequence: i,
+        }
+        wordCounts = append(wordCounts, wordCount)
       }
-      wordCounts = append(wordCounts, wordCount)
-     }
-   }
+    }
+
+    fromTime = fromTime.Add(duration)
+    fromParam = fromTime.Format("200601021504")
+ }
 
   return wordCounts
 }
@@ -446,13 +516,13 @@ func MinersCollection() (miners Miners, err error) {
   return
 }
 
-func TrendsCollection(location string, term string, fromParam string, interval int, velocityInterval float64, minimumVelocity float64) Trends {
+func TrendsCollection(location string, term string, fromParam string, toParam string, interval int, velocityInterval float64, minimumVelocity float64) Trends {
   trends := Trends {}
 
   if location == "all" {
     location = ""
   }
-  rows, err := QueryTerms(location, term, fromParam, interval)
+  rows, err := QueryTerms(location, term, fromParam, toParam)
 
   if err != nil {
 

@@ -200,7 +200,7 @@ func QueryMinerForId(minerId int) *sql.Rows {
 }
 
 
-func QueryTerms(location string, term string, fromDate string, interval int) (rows *sql.Rows, err error) {
+func QueryTerms(location string, term string, fromDate string, toDate string) (rows *sql.Rows, err error) {
     defer func() {
         if r := recover(); r != nil {
             var ok bool
@@ -211,22 +211,21 @@ func QueryTerms(location string, term string, fromDate string, interval int) (ro
         }
     }()
 
-    t, err := time.Parse("20060102", fromDate)
+    fromTime, err := time.Parse("200601021504", fromDate)
     if err != nil {
-        fmt.Errorf("invalid date: %v", err)
+        fmt.Errorf("invalid from date: %v", err)
     }
 
-    if interval > 0 {
-        toDate := t.Add(time.Duration(interval) * time.Hour * 24)
-
-        rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", t.Format(time.RFC3339), toDate.Format(time.RFC3339), term, location)
-        checkErr(err)
-        return
-    } else {
-        rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($1) || '%' AND posted > $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY term", location, t.Format(time.RFC3339), term)
-        checkErr(err)
-        return
+    toTime, err := time.Parse("200601021504", toDate)
+    if err != nil {
+        fmt.Errorf("invalid to date: %v", err)
     }
+
+    fmt.Println("between", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), fromDate, toDate)
+
+    rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location)
+    checkErr(err)
+    return
 }
 
 func QueryTermsForPost(postid int) *sql.Rows {

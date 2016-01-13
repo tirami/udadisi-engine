@@ -12,6 +12,8 @@ type WordCount struct {
   Term string `json:"term"`
   Occurrences  int `json:"occurrences"`
   Velocity float64 `json:"velocity"`
+  Series []int `json:"series"`
+  Sequence int `json:"sequence"`
 }
 
 type WordCounts []WordCount
