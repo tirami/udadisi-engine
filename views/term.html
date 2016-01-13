@@ -11,7 +11,9 @@
 
       {{$location := .Location}}
       {{$fromParam := .FromParam}}
+      {{$toParam := .ToParam}}
       {{$interval := .Interval}}
+      {{$term := .TermPackage.Term}}
 
       <h3>Series</h3>
       {{range .TermPackage.Series}}
@@ -20,7 +22,7 @@
 
       <h3>Related</h3>
       {{range .TermPackage.Related}}
-        {{.}},
+        <a href="{{.}}?from={{$fromParam}}&=to={{$toParam}}&interval={{$interval}}">{{.}}</a>,
       {{end}}
 
       <h3>Sources</h3>
