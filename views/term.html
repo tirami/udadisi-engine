@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container-fluid">
+      <a href="/">Home</a>
+      <h1>{{.TermPackage.Term}}</h1>
+      <h2>{{.FromParam}} - {{.ToParam}} interval of {{.Interval}}</h2>
+      <h3>{{.TermPackage.Term}}</h3>
+
+      {{$location := .Location}}
+      {{$fromParam := .FromParam}}
+      {{$interval := .Interval}}
+
+      <h3>Series</h3>
+      {{range .TermPackage.Series}}
+        {{.}},
+      {{end}}
+
+      <h3>Related</h3>
+      {{range .TermPackage.Related}}
+        {{.}},
+      {{end}}
+
+      <h3>Sources</h3>
+      <ul>
+        {{range $source := .TermPackage.Sources}}
+          <li>{{.Source}} : mined {{.Mined}} : posted {{.Posted}} <a href="{{.SourceURI}}" target="_new">{{.SourceURI}}</a></li>
+        {{end}}
+      </ul>
+    </div>
+  </body>
+</html>

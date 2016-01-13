@@ -98,7 +98,7 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   location := vars["location"]
   term := vars["term"]
 
-  termTrends := TermTrends {}
+  //termTrends := TermTrends {}
   fromParam := r.URL.Query().Get("from")
   toParam := r.URL.Query().Get("to")
   velocityParam := r.URL.Query().Get("velocity")
@@ -123,8 +123,8 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
     interval = 2
   }
 
-  trends := TrendsCollection(location, term, fromParam, toParam, interval, velocityInterval, minimumVelocity)
-
+  termPackage := TrendsCollection(location, term, fromParam, toParam, interval, velocityInterval, minimumVelocity)
+  /*
   last_trend_term := ""
   totalCounts := map[string]int {}
   thisTerm := ""
@@ -158,11 +158,12 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
 
   termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources, velocityInterval)
   termTrends = append(termTrends, termTrend)
+  */
 
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")
   w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
-  json.NewEncoder(w).Encode(termTrends)
+  json.NewEncoder(w).Encode(termPackage)
 }
 
 func BuildLocationsList() (locations Locations, err error) {
@@ -244,56 +245,17 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
     interval = 2
   }
 
-  trends := TrendsCollection(location, term, fromParam, toParam, interval, 1.0, 0.0)
+  termPackage := TrendsCollection(location, term, fromParam, toParam, interval, 1.0, 0.0)
 
-fmt.Fprintf(w, "<html><head><link href=\"/css/bootstrap.min.css\" rel=\"stylesheet\"></head><body><div class=\"container-fluid\">")
-  fmt.Fprintf(w, "<a href=\"/\">Home</a>")
-  fmt.Fprintf(w, "<h1><a href=\"../%s\">Main index</a></h1>", location)
-
-  last_trend_term := ""
-  totalCounts := map[string]int {}
-  thisTerm := ""
-  sources := Sources {}
-  for _, trend := range trends {
-    if trend.Term != last_trend_term {
-
-      if thisTerm != "" {
-        DisplayCount(w, fromParam, interval, thisTerm, totalCounts, sources)
-      }
-
-      last_trend_term = trend.Term
-      totalCounts = map[string]int {}
-      sources = Sources {}
-      thisTerm = trend.Term
-    }
-    source := Source {
-      Source: "Twitter",
-      SourceURI: trend.SourceURI,
-      Posted: trend.Posted,
-      Mined: trend.Mined,
-    }
-    sources = append(sources, source)
-
-    for _, wordcount := range trend.WordCounts {
-      count := totalCounts[wordcount.Term]
-      count = count + wordcount.Occurrences
-      totalCounts[wordcount.Term] = count
-    }
-  }
-
-/*
   content := make(map[string]interface{})
-  content["Title"] = "Main Index"
+  content["Location"] = location
   content["FromParam"] = fromParam
+  content["ToParam"] = toParam
   content["Interval"] = int(interval)
-  content["Term"] = thisTerm
-  content["Sources"] = sources
+  content["TermPackage"] = termPackage
 
-  renderTemplate(w, "termsindex", content)
-  */
+  renderTemplate(w, "term", content)
 
-  DisplayCount(w, fromParam, interval, thisTerm, totalCounts, sources)
-  fmt.Fprintf(w, "</div></body></html>")
 }
 
 func DisplayRootCount(w http.ResponseWriter, location string, fromParam string, interval int, totalCounts WordCounts) {
@@ -518,14 +480,122 @@ func MinersCollection() (miners Miners, err error) {
   return
 }
 
-func TrendsCollection(location string, term string, fromParam string, toParam string, interval int, velocityInterval float64, minimumVelocity float64) Trends {
-  trends := Trends {}
+func TrendsCollection(location string, term string, fromParam string, toParam string, interval int, velocityInterval float64, minimumVelocity float64) TermPackage {
+  //trends := Trends {}
 
   if location == "all" {
     location = ""
   }
-  rows, err := QueryTerms(location, term, fromParam, toParam)
 
+  t := time.Now()
+  if fromParam == "" {
+    from := t.Add(-24 * time.Hour)
+    fromParam = from.Format("200601021504")
+  }
+
+  if toParam == "" {
+    toParam = t.Format("200601021504")
+  }
+
+  fromTime, err := time.Parse("200601021504", fromParam)
+  if err != nil {
+      fmt.Errorf("invalid from date: %v", err)
+  }
+
+  toTime, err := time.Parse("200601021504", toParam)
+  if err != nil {
+      fmt.Errorf("invalid to date: %v", err)
+  }
+
+  duration := toTime.Sub(fromTime)
+  fmt.Println("duration ", duration.Minutes())
+  duration  = duration / time.Duration(interval)
+
+
+  termPackage := TermPackage {
+    Term: term,
+    Series: make([]int, interval),
+    Sources: make([]Source, 0),
+  }
+
+  related := map[string]int {}
+
+  totalOccurrences := 0
+
+  for i := 0; i < interval; i++ {
+
+    toTime = fromTime.Add(duration)
+    toParam = toTime.Format("200601021504")
+    rows, err := QueryTerms(location, term, fromParam, toParam)
+    if err != nil {
+    } else {
+      for rows.Next() {
+        var uid int
+        var postid int
+        var term string
+        var wordcount int
+        var posted time.Time
+        var location string
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location)
+        fmt.Println(uid, postid, term, wordcount, posted, location)
+        checkErr(err)
+        termPackage.Series[i] = termPackage.Series[i] + wordcount
+        totalOccurrences = totalOccurrences + wordcount
+
+        postRows := QueryPosts(fmt.Sprintf(" WHERE uid=%d", postid))
+        for postRows.Next() {
+          var thisPostuid int
+          var mined time.Time
+          var postPosted time.Time
+          var sourceURI string
+          var postLocation string
+          err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI, &postLocation)
+          checkErr(err)
+          source := Source {
+            Source: "Twitter",
+            SourceURI: sourceURI,
+            Posted: postPosted,
+          }
+          termPackage.Sources = append(termPackage.Sources, source)
+          termsRows := QueryTermsForPost(thisPostuid)
+            for termsRows.Next() {
+              var wcuid int
+              var wcpostid int
+              var wcTerm string
+              var wordcount int
+              var wcPosted time.Time
+              var wcLocation string
+              err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted, &wcLocation)
+              checkErr(err)
+              if _, ok := related[wcTerm]; ok {
+                related[wcTerm] += wordcount
+              } else {
+                related[wcTerm] = wordcount
+              }
+            }
+        }
+      }
+    }
+
+    // TODO: Need to sort the related terms by velocity
+    fromTime = fromTime.Add(duration)
+    fromParam = fromTime.Format("200601021504")
+  }
+
+  for key, _ := range related {
+    termPackage.Related = append(termPackage.Related, key)
+  }
+
+
+  fmt.Println("Term:", termPackage.Term)
+  fmt.Println("Series:", termPackage.Series)
+  fmt.Println("Related:", termPackage.Related)
+  fmt.Println("Sources:", termPackage.Sources)
+  fmt.Println(related)
+  fmt.Println(termPackage)
+
+
+/*
   if err != nil {
 
   } else {
@@ -576,6 +646,7 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
           }
       }
     }
+    */
 
-    return trends
+    return termPackage
 }

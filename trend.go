@@ -45,6 +45,20 @@ type TermTrend struct {
 
 type TermTrends []TermTrend
 
+type TermPackage struct {
+  Term string `json:"term"`
+  Velocity float64 `json:"velocity"`
+  Series []int `json:"series"`
+  Related []string `json:"related"`
+  SourceTypes []SourceType `json:"source_types"`
+  Sources []Source `json:"sources"`
+}
+
+type SourceType struct {
+  Name string `json:"name"`
+  Series []int `json:"series"`
+}
+
 type Seed struct {
   Miner string `json:"miner"`
   Location string `json:"location"`
