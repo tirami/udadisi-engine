@@ -481,7 +481,6 @@ func MinersCollection() (miners Miners, err error) {
 }
 
 func TrendsCollection(location string, term string, fromParam string, toParam string, interval int, velocityInterval float64, minimumVelocity float64) TermPackage {
-  //trends := Trends {}
 
   if location == "all" {
     location = ""
@@ -510,7 +509,6 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
   duration := toTime.Sub(fromTime)
   fmt.Println("duration ", duration.Minutes())
   duration  = duration / time.Duration(interval)
-
 
   termPackage := TermPackage {
     Term: term,
@@ -586,6 +584,9 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
     termPackage.Related = append(termPackage.Related, key)
   }
 
+  // Calculate the velocity
+  seriesAverage := float64(totalOccurrences / interval)
+  termPackage.Velocity = float64(termPackage.Series[interval - 1]) / seriesAverage
 
   fmt.Println("Term:", termPackage.Term)
   fmt.Println("Series:", termPackage.Series)
@@ -594,59 +595,5 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
   fmt.Println(related)
   fmt.Println(termPackage)
 
-
-/*
-  if err != nil {
-
-  } else {
-
-    for rows.Next() {
-          var uid int
-          var postid int
-          var term string
-          var wordcount int
-          var posted time.Time
-          var location string
-          err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location)
-          checkErr(err)
-          postRows := QueryPosts(fmt.Sprintf(" WHERE uid=%d", postid))
-          for postRows.Next() {
-            var thisPostuid int
-            var mined time.Time
-            var postPosted time.Time
-            var sourceURI string
-            var postLocation string
-            err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI, &postLocation)
-            checkErr(err)
-            termsRows := QueryTermsForPost(thisPostuid)
-            wordCounts := WordCounts {}
-            for termsRows.Next() {
-              var wcuid int
-              var wcpostid int
-              var wcTerm string
-              var wordcount int
-              var wcPosted time.Time
-              var wcLocation string
-              err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted, &wcLocation)
-              checkErr(err)
-              wordCount := WordCount {
-                Term: wcTerm,
-                Occurrences: wordcount,
-              }
-              wordCounts = append(wordCounts, wordCount)
-            }
-            trend := Trend{
-              Term: term,
-              SourceURI: sourceURI,
-              Mined: mined,
-              Posted: postPosted,
-              WordCounts: wordCounts,
-            }
-            trends = append(trends, trend)
-          }
-      }
-    }
-    */
-
-    return termPackage
+  return termPackage
 }

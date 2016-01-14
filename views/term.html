@@ -7,13 +7,15 @@
       <a href="/">Home</a>
       <h1>{{.TermPackage.Term}}</h1>
       <h2>{{.FromParam}} - {{.ToParam}} interval of {{.Interval}}</h2>
-      <h3>{{.TermPackage.Term}}</h3>
 
       {{$location := .Location}}
       {{$fromParam := .FromParam}}
       {{$toParam := .ToParam}}
       {{$interval := .Interval}}
       {{$term := .TermPackage.Term}}
+
+      <h3>Velocity</h3>
+      {{.TermPackage.Velocity}}
 
       <h3>Series</h3>
       {{range .TermPackage.Series}}
@@ -28,7 +30,7 @@
       <h3>Sources</h3>
       <ul>
         {{range $source := .TermPackage.Sources}}
-          <li>{{.Source}} : mined {{.Mined}} : posted {{.Posted}} <a href="{{.SourceURI}}" target="_new">{{.SourceURI}}</a></li>
+          <li>{{.Source}} : posted {{.Posted}} <a href="{{.SourceURI}}" target="_new">{{.SourceURI}}</a></li>
         {{end}}
       </ul>
     </div>
