@@ -124,41 +124,6 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   }
 
   termPackage := TrendsCollection(location, term, fromParam, toParam, interval, velocityInterval, minimumVelocity)
-  /*
-  last_trend_term := ""
-  totalCounts := map[string]int {}
-  thisTerm := ""
-  sources := Sources {}
-  for _, trend := range trends {
-    if trend.Term != last_trend_term {
-      if thisTerm != "" {
-        termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources, velocityInterval)
-        termTrends = append(termTrends, termTrend)
-      }
-
-      last_trend_term = trend.Term
-      totalCounts = map[string]int {}
-      sources = Sources {}
-
-      thisTerm = trend.Term
-    }
-    source := Source {
-      Source: "Twitter",
-      SourceURI: trend.SourceURI,
-      Posted: trend.Posted,
-    }
-    sources = append(sources, source)
-
-    for _, wordcount := range trend.WordCounts {
-      count := totalCounts[wordcount.Term]
-      count = count + wordcount.Occurrences
-      totalCounts[wordcount.Term] = count
-    }
-  }
-
-  termTrend := BuildTrendsJSON(thisTerm, totalCounts, sources, velocityInterval)
-  termTrends = append(termTrends, termTrend)
-  */
 
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")
@@ -255,68 +220,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   content["TermPackage"] = termPackage
 
   renderTemplate(w, "term", content)
-
 }
-
-func DisplayRootCount(w http.ResponseWriter, location string, fromParam string, interval int, totalCounts WordCounts) {
-  fmt.Fprintf(w, "<h2>%d terms</h2>", len(totalCounts))
-  fmt.Fprintf(w, "<div class=\"row\"><div class=\"col-md-4\">")
-  fmt.Fprintf(w, "<ul class=\"list-group\">")
-  for _, res := range totalCounts {
-    fmt.Fprintf(w, "<li class=\"list-group-item\"><a href=\"%s/%s?from=%s&interval=%d\">%s</a> <span class=\"badge\">%d</span></li>",
-      location,
-      res.Term,
-      fromParam,
-      interval,
-      res.Term, res.Occurrences)
-  }
-  fmt.Fprintf(w, "</ul></div></div>")
-}
-
-func BuildTrendsJSON(term string, totalCounts map[string]int, sources Sources, velocityInterval float64) TermTrend {
-  termTrend := TermTrend {}
-
-  termTrend.Term = term
-
-  termWordCounts := WordCounts {}
-  for _, res := range sortedKeys(totalCounts) {
-    termWordCount := WordCount {
-      Term: res,
-      Occurrences: totalCounts[res],
-      Velocity: float64(totalCounts[res]) / velocityInterval,
-    }
-    termWordCounts = append(termWordCounts, termWordCount)
-  }
-  termTrend.WordCounts = termWordCounts
-
-  termSources := Sources {}
-  for _, source := range sources {
-    termSource := source
-    termSources = append(termSources, termSource)
-  }
-
-  termTrend.Sources = termSources
-
-  return termTrend
-}
-
-func DisplayCount(w http.ResponseWriter, fromParam string, interval int, term string, totalCounts map[string]int, sources Sources) {
-  fmt.Fprintf(w, "<h2>%s (%d)</h2>", term, totalCounts[term])
-
-  for _, res := range sortedKeys(totalCounts) {
-    fmt.Fprintf(w, "<li><a href=\"%s?from=%s&interval=%d\">%s</a> : %d</li>", res, fromParam, interval, res, totalCounts[res])
-  }
-
-  fmt.Fprintf(w, "<h3>Sources</h3>")
-  for _, source := range sources {
-    fmt.Fprintf(w, "<li>%s : mined %s : posted %s <a href=\"%s\" target=\"_new\">%s</a></li>",
-      source.Source,
-      source.Mined,
-      source.Posted,
-      source.SourceURI, source.SourceURI)
-  }
-}
-
 
 // Internal stuff
 func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]interface{}) {
@@ -585,7 +489,9 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
   }
 
   // Calculate the velocity
-  seriesAverage := float64(totalOccurrences / interval)
+  seriesAverage := float64(totalOccurrences) / float64(interval)
+  fmt.Println("Total:", totalOccurrences, "interval:", interval)
+  fmt.Println("Average:", seriesAverage)
   termPackage.Velocity = float64(termPackage.Series[interval - 1]) / seriesAverage
 
   fmt.Println("Term:", termPackage.Term)
