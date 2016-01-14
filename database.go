@@ -223,8 +223,11 @@ func QueryTerms(location string, term string, fromDate string, toDate string) (r
 
     fmt.Println("Searching for:", term, "in", location, "between", fromTime.Format(time.RFC3339), "and", toTime.Format(time.RFC3339))
 
-    // rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location)
-    rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE '%' || LOWER($3) || '%' ORDER BY posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location)
+    if term != "" {
+        rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) ORDER BY posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location)
+    } else {
+        rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($3) || '%' AND posted between $1 AND $2 ORDER BY posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), location)
+    }
     checkErr(err)
     return
 }
