@@ -17,12 +17,24 @@
         <tr>
           <th></th>
           <th>Term</th>
+          <th>Velocity</th>
+          <th>Trend Change</th>
           <th>Time series</th>
         </tr>
         {{range $count := .SortedCounts}}
           <tr>
             <td><span class="badge">{{$count.Occurrences}}</span></td>
             <td><a href="{{$location}}/{{$count.Term}}?from={{$fromParam}}&interval={{$interval}}">{{$count.Term}}</a></td>
+            <td>{{.Velocity}}</td>
+            <td>
+              {{if gt .Velocity 1.0}}
+                up
+              {{else if lt .Velocity 1.0}}
+                down
+              {{else}}
+                -
+              {{end}}
+            </td>
             <td>
               {{range $count.Series}}
                 {{.}},

@@ -346,10 +346,16 @@ func WordCountRootCollection(location string, fromParam string, toParam string, 
 
   for _, res := range sortedKeys(totalCounts) {
     if limit == 0 || len(sortedCounts) < int(limit) {
+      // Calculate the velocity
+      seriesAverage := float64(totalCounts[res]) / float64(interval)
+      fmt.Println("Total:", totalCounts[res], "interval:", interval)
+      fmt.Println("Average:", seriesAverage)
+
       sortedCounts = append(sortedCounts, WordCount {
                 Term: res,
                 Occurrences: totalCounts[res],
                 Series: serieses[res],
+                Velocity: float64(serieses[res][interval - 1]) / seriesAverage,
               })
     }
   }
