@@ -44,6 +44,17 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
   toParam := r.URL.Query().Get("to")
+  t := time.Now()
+  if fromParam == "" {
+    from := t.Add(-24 * time.Hour)
+    fromParam = from.Format("200601021504")
+  }
+  if toParam == "" {
+    toParam = t.Format("200601021504")
+  }
+  if interval < 1 {
+    interval = 2
+  }
   wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval), 0)
 
   totalCounts := map[string]int {}
