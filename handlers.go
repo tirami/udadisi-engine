@@ -104,12 +104,16 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   velocityParam := r.URL.Query().Get("velocity")
   minimumVelocity, _ := strconv.ParseFloat(velocityParam, 64)
   intervalParam := r.URL.Query().Get("interval")
-  intervalConv, _ := strconv.ParseInt(intervalParam, 10, 2)
+  intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
   interval := int(intervalConv)
   velocityInterval := float64(interval)
     if velocityInterval == 0.0 {
       velocityInterval = 1.0
     }
+
+  if(minimumVelocity < 0.0) {
+    minimumVelocity = 0.0
+  }
 
   t := time.Now()
   if fromParam == "" {
