@@ -137,7 +137,7 @@
         },
         "/locations/{location}/trends/{term}": {
             "get": {
-                "description": "Gets `Trend` objects.\nOptional query param of **velocity** determines\nminimum velocity of trends returned\n",
+                "description": "Gets `TermPackage` object.\nOptional query param of **velocity** determines\nminimum velocity of trends returned\n",
                 "parameters": [
                     {
                         "name": "term",
@@ -166,14 +166,21 @@
                     {
                         "name": "from",
                         "in": "query",
-                        "description": "date and time posts are from",
+                        "description": "start date and time posts are from in format YYYYMMDDhhmm, defaults to -24hrs before now",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "end date and time posts are from, defaults to now",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "interval",
                         "in": "query",
-                        "description": "time interval to include post from from date",
+                        "description": "number of periods to divide time range by, defaults to 2",
                         "required": false,
                         "type": "string"
                     }
@@ -182,37 +189,31 @@
                     "200": {
                         "description": "Successful response",
                         "schema": {
-                            "title": "ArrayOfTrends",
-                            "type": "array",
-                            "items": {
-                                "title": "Trend",
-                                "type": "object",
-                                "properties": {
-                                    "term": {
+                            "title": "TermPackage",
+                            "type": "object",
+                            "properties": {
+                                "term": {
+                                    "type": "string"
+                                },
+                                "velocity": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "description": "Value calculated on number of occurances divided by time period"
+                                },
+                                "series": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number"
+                                    }
+                                },
+                                "related" : {
+                                    "type": "array",
+                                    "description": "All the terms that appear in the same sources as the requested term",
+                                    "items": {
                                         "type": "string"
-                                    },
-                                    "word_counts": {
-                                        "type": "array",
-                                        "items": {
-                                            "title": "WordCount",
-                                            "type": "object",
-                                            "properties": {
-                                                "occurances": {
-                                                    "type": "integer"
-                                                },
-                                                "term": {
-                                                    "type": "string",
-                                                    "description": "Term that the count is for"
-                                                },
-                                                "velocity": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "description": "Value calculated on number of occurances divided by time period"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "sources": {
+                                    }
+                                },
+                                 "sources": {
                                         "type": "array",
                                         "items": {
                                             "title": "Source",
@@ -229,7 +230,6 @@
                                             }
                                         }
                                     }
-                                }
                             }
                         }
                     }
