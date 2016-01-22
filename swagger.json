@@ -41,6 +41,20 @@
                         "required": true,
                         "type": "string",
                         "format": "string"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "start date and time posts are from, defaults to -24hrs before now",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "end date and time posts are from, defaults to now",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
