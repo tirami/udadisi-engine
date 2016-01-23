@@ -1,39 +1,106 @@
 <html>
   <head>
     <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/engine.css" rel="stylesheet">
   </head>
   <body>
+  	<nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Udadisi Engine</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+          	<li><a href="/">Home</a></li>
+          	<li><a href="/admin/">Admin Home</a></li>
+          	<li class="active"><a href="/admin/miners">Miners Admin</a></li>
+          	<li><a href="/developer/" target="_blank">API Docs powered by Swagger</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
   	<div class="container-fluid">
-	  	<a href="/admin/">Admin Home</a>
 			<h1>{{.Title}}</h1>
 
+			{{ if .MinerError }}
+				<div class="alert alert-danger" role="alert">{{.MinerError}}</div>
+			{{ end }}
+
 			{{ if .Error }}
-				<p>{{.Error}}</p>
+				<div class="alert alert-danger" role="alert">{{.Error}}</div>
 			{{ else }}
-				<form action="miner" method="post">
-					Name:<br><input type="text" name="name"><br>
-					URL:<br><input type="text" name="url"><br>
-					Location:<br><input type="text" name="location"><br>
-					<input type="submit" value="Submit">
+				<form action="/admin/miners" method="post" class="form-horizontal">
+					<div class="form-group">
+						<label for="name" class="col-sm-2 control-label">Name</label>
+						<div class="col-sm-4">
+							<input type="text" name="name" class="form-control" placeholder="Name">
+							<p class="help-block">A name used to identify the miner.</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="source" class="col-sm-2 control-label">Source</label>
+						<div class="col-sm-4">
+							<input type="text" name="source" class="form-control" placeholder="Source">
+							<p class="help-block">Type of miner e.g. twitter, blog, etc.</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="url" class="col-sm-2 control-label">URL</label>
+						<div class="col-sm-4">
+							<input type="text" name="url" class="form-control" placeholder="URL">
+							<p class="help-block">URL of the miner.</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="location" class="col-sm-2 control-label">Location</label>
+						<div class="col-sm-4">
+							<input type="text" name="location" class="form-control" placeholder="Location">
+							<p class="help-block">City / region that the miner is collecting data for.</p>
+						</div>
+					</div>
+					<div class="form-group">
+    				<div class="col-sm-offset-2 col-sm-4">
+							<button type="submit" class="btn btn-default">Create Miner</button>
+						</div>
+					</div>
 				</form>
 
-				<table class="table table-striped">
-					<tr>
-						<th>Name</th>
-						<th>Location</th>
-						<th>Url</th>
-						<th>Id</th>
-					</tr>
-				{{range $miner := .Miners}}
-					<tr>
-						<td>{{$miner.Name}}</td>
-						<td>{{$miner.Location}}</td>
-						<td>{{$miner.Url}}</td>
-						<td>{{$miner.Uid}}</td>
-						<td><a href="{{$miner.Url}}/settings">Configure</a></td>
-					</tr>
-				{{end}}
-				</table>
+				<div class="row">
+					<div class="col-sm-offset-2 col-sm-4">
+						<a href="/admin/miners/resetdatabase" class="btn btn-danger">Reset Miners</a>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-sm-offset-1 col-sm-10">
+						<table class="table table-striped">
+							<tr>
+								<th>Name</th>
+								<th>Location</th>
+								<th>Source</th>
+								<th>URL</th>
+								<th>Id</th>
+							</tr>
+						{{range $miner := .Miners}}
+							<tr>
+								<td>{{$miner.Name}}</td>
+								<td>{{$miner.Location}}</td>
+								<th>{{$miner.Source}}</td>
+								<td>{{$miner.Url}}</td>
+								<td>{{$miner.Uid}}</td>
+								<td><a href="{{$miner.Url}}/categories/{{$miner.Uid}}" target="_blank">Configure</a></td>
+							</tr>
+						{{end}}
+					</table>
+				</div>
+			</div>
 			{{ end }}
 		</div>
 	</body>

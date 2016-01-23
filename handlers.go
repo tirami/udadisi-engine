@@ -23,6 +23,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
     content["Error"] = "Miners database table not yet created"
   } else {
     content["Locations"] = locations
+    t := time.Now()
+    lastWeek := t.Add(-24 * time.Hour * 7)
+    content["LastWeek"] = lastWeek.Format("200601021504")
   }
   renderTemplate(w, "index", content)
 }
@@ -40,6 +43,7 @@ func RenderLocationsJSON(w http.ResponseWriter, r *http.Request) {
 func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
+  source := vars["source"]
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
@@ -55,7 +59,7 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   if interval < 1 {
     interval = 2
   }
-  wordCounts := WordCountRootCollection(location, fromParam, toParam, int(interval), 0)
+  wordCounts := WordCountRootCollection(location, source, fromParam, toParam, int(interval), 0)
 
   totalCounts := map[string]int {}
 
@@ -78,6 +82,7 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
 func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
+  source := vars["source"]
   limitParam := r.URL.Query().Get("limit")
   limit, _ := strconv.ParseInt(limitParam, 10, 0)
   intervalParam := r.URL.Query().Get("interval")
@@ -95,7 +100,7 @@ func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
   if interval < 1 {
     interval = 2
   }
-  sortedCounts := WordCountRootCollection(location, fromParam, toParam, int(interval), int(limit))
+  sortedCounts := WordCountRootCollection(location, source, fromParam, toParam, int(interval), int(limit))
 
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")
@@ -174,6 +179,7 @@ func BuildLocationsList() (locations Locations, err error) {
 func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
+  source := vars["source"]
   limitParam := r.URL.Query().Get("limit")
   limit, _ := strconv.ParseInt(limitParam, 10, 0)
   intervalParam := r.URL.Query().Get("interval")
@@ -191,7 +197,7 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   if interval < 1 {
     interval = 2
   }
-  sortedCounts := WordCountRootCollection(location, fromParam, toParam, int(interval), int(limit))
+  sortedCounts := WordCountRootCollection(location, source, fromParam, toParam, int(interval), int(limit))
 
   content := make(map[string]interface{})
   content["Title"] = "Main Index"
@@ -254,29 +260,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]inter
   }
 }
 
-func SeedsCollection() Seeds {
-  seeds := Seeds {}
-
-  rows := QuerySeeds()
-  for rows.Next() {
-    var uid int
-    var miner string
-    var location string
-    var source string
-    err := rows.Scan(&uid, &miner, &location, &source)
-    checkErr(err)
-    seed := Seed {
-      Miner: miner,
-      Location: location,
-      Source: source,
-    }
-    seeds = append(seeds, seed)
-  }
-
-  return seeds
-}
-
-func WordCountRootCollection(location string, fromParam string, toParam string, interval int, limit int) WordCounts {
+func WordCountRootCollection(location string, source string, fromParam string, toParam string, interval int, limit int) WordCounts {
   wordCounts := WordCounts {}
 
   if location == "all" {
@@ -324,7 +308,8 @@ func WordCountRootCollection(location string, fromParam string, toParam string, 
         var wordcount int
         var posted time.Time
         var termLocation string
-        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation)
+        var termSource string
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation, &termSource)
         checkErr(err)
         wordCount := WordCount {
           Term: term,
@@ -388,13 +373,15 @@ func MinersCollection() (miners Miners, err error) {
     for rows.Next() {
       var uid int
       var name string
+      var source string
       var location string
       var url string
-      err := rows.Scan(&uid, &name, &location, &url)
+      err := rows.Scan(&uid, &name, &source, &location, &url)
       checkErr(err)
       miner := Miner {
         Uid: uid,
         Name: name,
+        Source: source,
         Location: location,
         Url: url,
       }
@@ -459,7 +446,8 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
         var wordcount int
         var posted time.Time
         var location string
-        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location)
+        var source string
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location, &source)
         fmt.Println(uid, postid, term, wordcount, posted, location)
         checkErr(err)
         termPackage.Series[i] = termPackage.Series[i] + wordcount
@@ -472,10 +460,11 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
           var postPosted time.Time
           var sourceURI string
           var postLocation string
-          err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI, &postLocation)
+          var postSource string
+          err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI, &postLocation, &postSource)
           checkErr(err)
           source := Source {
-            Source: "Twitter",
+            Source: postSource,
             SourceURI: sourceURI,
             Posted: postPosted,
           }
@@ -488,7 +477,8 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
               var wordcount int
               var wcPosted time.Time
               var wcLocation string
-              err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted, &wcLocation)
+              var wcSource string
+              err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted, &wcLocation, &wcSource)
               checkErr(err)
               if _, ok := related[wcTerm]; ok {
                 related[wcTerm] += wordcount

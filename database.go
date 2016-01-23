@@ -20,30 +20,28 @@ const (
 const (
     Posts = iota
     Terms
-    SeedsTable
     MinersTable
 )
 
 var tables = map[int]string{
     0: "Posts",
     1: "Terms",
-    2: "SeedsTable",
-    3: "MinersTable",
+    2: "MinersTable",
 }
 
 var datetime = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 
 // Post: uid serial mined:datetime posted:datetime sourceURI: string
 var CREATE = map[int]string{
-    Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text, location text)",
+    Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text, location text, source text)",
     Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone, location text)",
-    MinersTable: "CREATE TABLE IF NOT EXISTS miners(uid serial NOT NULL, name text, location text, url text)",
+    MinersTable: "CREATE TABLE IF NOT EXISTS miners(uid serial NOT NULL, name text, source text, location text, url text)",
 }
 
 var DROP = map[int]string{
     Posts: "DROP TABLE IF EXISTS posts",
     Terms: "DROP TABLE IF EXISTS terms",
-    SeedsTable: "DROP TABLE IF EXISTS seeds",
+    MinersTable: "DROP TABLE IF EXISTS miners",
 }
 
 
@@ -63,10 +61,14 @@ func BuildDatabase() {
 
     DropTable(DROP[Posts])
     DropTable(DROP[Terms])
-    DropTable(DROP[SeedsTable])
     DropTable(DROP[MinersTable])
     CreateTable(CREATE[Posts])
     CreateTable(CREATE[Terms])
+    CreateTable(CREATE[MinersTable])
+}
+
+func ResetMinersDatabase() {
+    DropTable(DROP[MinersTable])
     CreateTable(CREATE[MinersTable])
 }
 
@@ -114,24 +116,7 @@ func DropTable(sql string) {
     }
 }
 
-
-func UpdatePost() {
-    //db := ConnectToDatabase()
-    /*
-    stmt, err := db.Prepare("update userinfo set username=$1 where uid=$2")
-    checkErr(err)
-
-    res, err := stmt.Exec("astaxieupdate", lastInsertId)
-    checkErr(err)
-
-    affect, err := res.RowsAffected()
-    checkErr(err)
-
-    fmt.Println(affect, "rows changed")
-    */
-}
-
-func InsertMiner(name string, location string, url string) (lastInsertId int, err error) {
+func InsertMiner(name string, location string, source string, url string) (lastInsertId int, err error) {
     defer func() {
         if r := recover(); r != nil {
             var ok bool
@@ -142,16 +127,10 @@ func InsertMiner(name string, location string, url string) (lastInsertId int, er
         }
     }()
 
-    err = db.QueryRow("INSERT INTO miners (name, location, url) VALUES($1,$2,$3) returning uid;", name, location, url).Scan(&lastInsertId)
+    err = db.QueryRow("INSERT INTO miners (name, location, source, url) VALUES($1,$2,$3,$4) returning uid;", name, location, source, url).Scan(&lastInsertId)
     checkErr(err)
 
     return
-}
-
-func InsertSeed(miner string, location string, source string) {
-    var lastInsertId int
-    err := db.QueryRow("INSERT INTO seeds (minertype, location, source) VALUES($1,$2,$3) returning uid;", miner, location, source).Scan(&lastInsertId)
-    checkErr(err)
 }
 
 func InsertTerm(location string, term string, wordcount int, postid int, posted time.Time) {
@@ -160,7 +139,7 @@ func InsertTerm(location string, term string, wordcount int, postid int, posted 
     checkErr(err)
 }
 
-func InsertPost(location string, sourceURI string, postedAt time.Time, minedAt time.Time) int {
+func InsertPost(source string, location string, sourceURI string, postedAt time.Time, minedAt time.Time) int {
     lastInsertId := 0
 
     // Check to see if we already have an entry for the sourceURI
@@ -168,7 +147,7 @@ func InsertPost(location string, sourceURI string, postedAt time.Time, minedAt t
     db.QueryRow("SELECT 1 FROM posts WHERE sourceURI=$1 AND location=$2", sourceURI, location).Scan(&duplicate)
 
     if duplicate == false {
-       err := db.QueryRow("INSERT INTO posts (location, mined, posted, sourceURI) VALUES($1,$2,$3,$4) returning uid;", location, minedAt.Format(time.RFC3339), postedAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
+       err := db.QueryRow("INSERT INTO posts (source, location, mined, posted, sourceURI) VALUES($1,$2,$3,$4,$5) returning uid;", source, location, minedAt.Format(time.RFC3339), postedAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
         checkErr(err)
     }
 
@@ -224,16 +203,16 @@ func QueryTerms(location string, term string, fromDate string, toDate string) (r
     fmt.Println("Searching for:", term, "in", location, "between", fromTime.Format(time.RFC3339), "and", toTime.Format(time.RFC3339))
 
     if term != "" {
-        rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($4) || '%' AND posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) ORDER BY posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location)
+        rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($4) || '%' AND terms.posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location)
     } else {
-        rows, err = db.Query("SELECT * FROM terms WHERE LOWER(location) LIKE '%' || LOWER($3) || '%' AND posted between $1 AND $2 ORDER BY posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), location)
+        rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($3) || '%' AND terms.posted between $1 AND $2 ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), location)
     }
     checkErr(err)
     return
 }
 
 func QueryTermsForPost(postid int) *sql.Rows {
-    rows, err := db.Query("SELECT * FROM terms WHERE postid=$1", postid)
+    rows, err := db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND postid=$1", postid)
     checkErr(err)
 
     return rows
@@ -241,19 +220,6 @@ func QueryTermsForPost(postid int) *sql.Rows {
 
 func QueryPosts(args ...string) *sql.Rows {
     query := "SELECT * FROM posts"
-    var buffer = bytes.NewBufferString(query)
-    for _, v := range args {
-        buffer.WriteString(fmt.Sprint(v, " "))
-    }
-    query = buffer.String()
-    rows, err := db.Query(query)
-    checkErr(err)
-
-    return rows
-}
-
-func QuerySeeds(args ...string) *sql.Rows {
-    query := "SELECT * from seeds"
     var buffer = bytes.NewBufferString(query)
     for _, v := range args {
         buffer.WriteString(fmt.Sprint(v, " "))

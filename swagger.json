@@ -37,22 +37,30 @@
                     {
                         "name": "location",
                         "in": "path",
-                        "description": "name of location that the states should be from",
+                        "description": "name of location that the stats should be from",
                         "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "source type that the stats should be from",
+                        "required": false,
                         "type": "string",
                         "format": "string"
                     },
                     {
                         "name": "from",
                         "in": "query",
-                        "description": "start date and time posts are from, defaults to -24hrs before now",
+                        "description": "start date and time stats are from, defaults to -24hrs before now",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "to",
                         "in": "query",
-                        "description": "end date and time posts are from, defaults to now",
+                        "description": "end date and time stats are from, defaults to now",
                         "required": false,
                         "type": "string"
                     }

@@ -97,9 +97,15 @@ var routes = Routes{
         AdminMiners,
     },
     Route{
+        "AdminResetMinersDatabase",
+        "GET",
+        "/admin/miners/resetdatabase",
+        AdminMinersResetDatabase,
+    },
+    Route{
         "AdminMiners",
         "POST",
-        "/admin/miner",
+        "/admin/miners",
         AdminCreateMiner,
     },
     Route{

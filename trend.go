@@ -77,6 +77,7 @@ type Miner struct {
   Uid int `json:"id"`
   Name string `json:"name"`
   Location string `json:"location"`
+  Source string `json:"source"`
   Url string `json:"url"`
 }
 
@@ -84,7 +85,7 @@ type Miners []Miner
 
 type MinerPostsJSON struct {
   Posts []MinerPostJSON `json:"posts"`
-  MinerId int `json:"miner_id"`
+  MinerId string `json:"miner_id"`
 }
 
 type MinerPostJSON struct {
