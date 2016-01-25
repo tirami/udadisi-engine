@@ -169,6 +169,7 @@ func BuildLocationsList() (locations Locations, err error) {
     if _, exists := locationsAdded[miner.Location]; !exists {
         locationsAdded[miner.Location] = Location{
           Name: miner.Location,
+          GeoCoord: miner.GeoCoord,
         }
         locations = append(locations, locationsAdded[miner.Location])
       }
@@ -380,13 +381,15 @@ func MinersCollection() (miners Miners, err error) {
       var source string
       var location string
       var url string
-      err := rows.Scan(&uid, &name, &source, &location, &url)
+      var geoCoord Point
+      err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord)
       checkErr(err)
       miner := Miner {
         Uid: uid,
         Name: name,
         Source: source,
         Location: location,
+        GeoCoord: geoCoord,
         Url: url,
       }
       miners = append(miners, miner)

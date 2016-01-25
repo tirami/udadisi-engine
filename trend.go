@@ -69,6 +69,7 @@ type Seeds []Seed
 
 type Location struct {
   Name string `json:"name"`
+  GeoCoord Point `json:"geo_coord"`
 }
 
 type Locations []Location
@@ -77,6 +78,7 @@ type Miner struct {
   Uid int `json:"id"`
   Name string `json:"name"`
   Location string `json:"location"`
+  GeoCoord Point `json:"geo_coord"`
   Source string `json:"source"`
   Url string `json:"url"`
 }

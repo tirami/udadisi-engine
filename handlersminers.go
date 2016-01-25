@@ -36,11 +36,18 @@ func AdminCreateMiner(w http.ResponseWriter, r *http.Request) {
     fmt.Println(err)
   }
 
+  content := make(map[string]interface{})
+
   name := r.PostFormValue("name")
   url := r.PostFormValue("url")
   location := r.PostFormValue("location")
+  latitude := r.PostFormValue("latitude")
+  longitude := r.PostFormValue("longitude")
   source := r.PostFormValue("source")
-  lastInsertId, err := InsertMiner(name, location, source, url)
+  lastInsertId, err := InsertMiner(name, location, latitude, longitude, source, url)
+  if err != nil {
+    content["MinerError"] = err
+  }
   sendIdUrl := fmt.Sprintf("%s/categories", url)
   idData := fmt.Sprintf("{\"id\":\"%d\"}", lastInsertId)
 
@@ -53,8 +60,6 @@ func AdminCreateMiner(w http.ResponseWriter, r *http.Request) {
   if err == nil {
     defer resp.Body.Close()
   }
-
-  content := make(map[string]interface{})
 
   content["Title"] = "Miners Admin"
   if err != nil {

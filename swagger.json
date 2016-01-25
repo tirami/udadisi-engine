@@ -22,6 +22,21 @@
                                 "properties": {
                                     "name": {
                                         "type": "string"
+                                    },
+                                    "geo_coord": {
+                                        "type": "object",
+                                        "properties": {
+                                            "latitude": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "description": "Latitude of the location"
+                                            },
+                                            "longitude": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "description": "Longitude of the location"
+                                            },
+                                        }
                                     }
                                 }
                             }

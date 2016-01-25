@@ -35,7 +35,7 @@ var datetime = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 var CREATE = map[int]string{
     Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text, location text, source text)",
     Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone, location text)",
-    MinersTable: "CREATE TABLE IF NOT EXISTS miners(uid serial NOT NULL, name text, source text, location text, url text)",
+    MinersTable: "CREATE TABLE IF NOT EXISTS miners(uid serial NOT NULL, name text, source text, location text, url text, geocoord point)",
 }
 
 var DROP = map[int]string{
@@ -116,7 +116,7 @@ func DropTable(sql string) {
     }
 }
 
-func InsertMiner(name string, location string, source string, url string) (lastInsertId int, err error) {
+func InsertMiner(name string, location string, latitude string, longitude string, source string, url string) (lastInsertId int, err error) {
     defer func() {
         if r := recover(); r != nil {
             var ok bool
@@ -127,7 +127,7 @@ func InsertMiner(name string, location string, source string, url string) (lastI
         }
     }()
 
-    err = db.QueryRow("INSERT INTO miners (name, location, source, url) VALUES($1,$2,$3,$4) returning uid;", name, location, source, url).Scan(&lastInsertId)
+    err = db.QueryRow("INSERT INTO miners (name, location, geocoord, source, url) VALUES($1,$2,POINT($3,$4),$5,$6) returning uid;", name, location, latitude, longitude, source, url).Scan(&lastInsertId)
     checkErr(err)
 
     return
