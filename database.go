@@ -179,7 +179,7 @@ func QueryMinerForId(minerId int) *sql.Rows {
 }
 
 
-func QueryTerms(location string, term string, fromDate string, toDate string) (rows *sql.Rows, err error) {
+func QueryTerms(source string, location string, term string, fromDate string, toDate string) (rows *sql.Rows, err error) {
     defer func() {
         if r := recover(); r != nil {
             var ok bool
@@ -200,12 +200,12 @@ func QueryTerms(location string, term string, fromDate string, toDate string) (r
         fmt.Errorf("invalid to date: %v", err)
     }
 
-    fmt.Println("Searching for:", term, "in", location, "between", fromTime.Format(time.RFC3339), "and", toTime.Format(time.RFC3339))
+    fmt.Println("Searching for:", term, "in", location, "between", fromTime.Format(time.RFC3339), "and", toTime.Format(time.RFC3339), "source", source)
 
     if term != "" {
-        rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($4) || '%' AND terms.posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location)
+        rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($4) || '%' AND terms.posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) AND (LOWER(source) = LOWER($5) OR $5 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location, source)
     } else {
-        rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($3) || '%' AND terms.posted between $1 AND $2 ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), location)
+        rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($3) || '%' AND terms.posted between $1 AND $2 AND (LOWER(posts.source) = LOWER($4) OR $4 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), location, source)
     }
     checkErr(err)
     return

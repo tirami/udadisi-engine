@@ -101,6 +101,14 @@
                         "type": "integer"
                     },
                     {
+                        "name": "source",
+                        "in": "query",
+                        "description": "source type that the stats should be from",
+                        "required": false,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
                         "name": "from",
                         "in": "query",
                         "description": "start date and time posts are from, defaults to -24hrs before now",
@@ -184,6 +192,14 @@
                         "required": false,
                         "type": "number",
                         "format": "float"
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "source type that the stats should be from",
+                        "required": false,
+                        "type": "string",
+                        "format": "string"
                     },
                     {
                         "name": "from",

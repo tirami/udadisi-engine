@@ -42,8 +42,9 @@ func RenderLocationsJSON(w http.ResponseWriter, r *http.Request) {
 // Generates JSON stats for a location
 func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
+  fmt.Println(vars)
   location := vars["location"]
-  source := vars["source"]
+  source := r.URL.Query().Get("source")
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
@@ -82,7 +83,7 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
 func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
-  source := vars["source"]
+  source := r.URL.Query().Get("source")
   limitParam := r.URL.Query().Get("limit")
   limit, _ := strconv.ParseInt(limitParam, 10, 0)
   intervalParam := r.URL.Query().Get("interval")
@@ -112,6 +113,7 @@ func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
 func TrendsIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
+  source := r.URL.Query().Get("source")
   term := vars["term"]
 
   //termTrends := TermTrends {}
@@ -143,7 +145,7 @@ func TrendsIndex(w http.ResponseWriter, r *http.Request) {
     interval = 2
   }
 
-  termPackage := TrendsCollection(location, term, fromParam, toParam, interval, velocityInterval, minimumVelocity)
+  termPackage := TrendsCollection(source,location, term, fromParam, toParam, interval, velocityInterval, minimumVelocity)
 
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")
@@ -179,7 +181,7 @@ func BuildLocationsList() (locations Locations, err error) {
 func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
-  source := vars["source"]
+  source := r.URL.Query().Get("source")
   limitParam := r.URL.Query().Get("limit")
   limit, _ := strconv.ParseInt(limitParam, 10, 0)
   intervalParam := r.URL.Query().Get("interval")
@@ -213,6 +215,7 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
 func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   location := vars["location"]
+  source := r.URL.Query().Get("source")
   term := vars["term"]
   fromParam := r.URL.Query().Get("from")
   toParam := r.URL.Query().Get("to")
@@ -231,7 +234,7 @@ func WebTrendsIndex(w http.ResponseWriter, r *http.Request) {
     interval = 2
   }
 
-  termPackage := TrendsCollection(location, term, fromParam, toParam, interval, 1.0, 0.0)
+  termPackage := TrendsCollection(source, location, term, fromParam, toParam, interval, 1.0, 0.0)
 
   content := make(map[string]interface{})
   content["Location"] = location
@@ -296,11 +299,12 @@ func WordCountRootCollection(location string, source string, fromParam string, t
     toTime = fromTime.Add(duration)
     toParam = toTime.Format("200601021504")
 
-    rows, err := QueryTerms(location, "", fromParam, toParam)
+    rows, err := QueryTerms(source, location, "", fromParam, toParam)
 
     if err != nil {
-
+      fmt.Println(err)
     } else {
+      fmt.Println("Terms found - now processing them")
       for rows.Next() {
         var uid int
         var postid int
@@ -392,7 +396,7 @@ func MinersCollection() (miners Miners, err error) {
   return
 }
 
-func TrendsCollection(location string, term string, fromParam string, toParam string, interval int, velocityInterval float64, minimumVelocity float64) TermPackage {
+func TrendsCollection(source string, location string, term string, fromParam string, toParam string, interval int, velocityInterval float64, minimumVelocity float64) TermPackage {
 
   if location == "all" {
     location = ""
@@ -436,7 +440,7 @@ func TrendsCollection(location string, term string, fromParam string, toParam st
 
     toTime = fromTime.Add(duration)
     toParam = toTime.Format("200601021504")
-    rows, err := QueryTerms(location, term, fromParam, toParam)
+    rows, err := QueryTerms(source, location, term, fromParam, toParam)
     if err != nil {
     } else {
       for rows.Next() {
