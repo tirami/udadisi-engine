@@ -244,6 +244,26 @@
                                         "type": "number"
                                     }
                                 },
+                                "source_types": {
+                                    "type": "array",
+                                    "items": {
+                                        "title": "SourceType",
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "The type of source, e.g. Twitter, Blog, Journal"
+                                                },
+                                            "series": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "number"
+                                                    }
+                                            }
+                                        }
+
+                                    }
+                                },
                                 "related" : {
                                     "type": "array",
                                     "description": "All the terms that appear in the same sources as the requested term",

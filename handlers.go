@@ -430,14 +430,16 @@ func TrendsCollection(source string, location string, term string, fromParam str
     Term: term,
     Series: make([]int, interval),
     Sources: make([]Source, 0),
+    SourceTypes: make([]SourceType, 0),
   }
 
   related := map[string]int {}
 
   totalOccurrences := 0
 
-  for i := 0; i < interval; i++ {
+  sourceSerieses := map[string][]int {}
 
+  for i := 0; i < interval; i++ {
     toTime = fromTime.Add(duration)
     toParam = toTime.Format("200601021504")
     rows, err := QueryTerms(source, location, term, fromParam, toParam)
@@ -456,6 +458,12 @@ func TrendsCollection(source string, location string, term string, fromParam str
         checkErr(err)
         termPackage.Series[i] = termPackage.Series[i] + wordcount
         totalOccurrences = totalOccurrences + wordcount
+
+        if _, ok := sourceSerieses[source]; ok {
+        } else {
+          sourceSerieses[source] = make([]int, int(interval))
+        }
+        sourceSerieses[source][i] = sourceSerieses[source][i] + wordcount
 
         postRows := QueryPosts(fmt.Sprintf(" WHERE uid=%d", postid))
         for postRows.Next() {
@@ -499,6 +507,13 @@ func TrendsCollection(source string, location string, term string, fromParam str
     fromParam = fromTime.Format("200601021504")
   }
 
+  for key, value := range sourceSerieses {
+    termPackage.SourceTypes = append(termPackage.SourceTypes, SourceType {
+      Name: key,
+      Series: value,
+      })
+  }
+
   for key, _ := range related {
     termPackage.Related = append(termPackage.Related, key)
   }
@@ -511,6 +526,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
 
   fmt.Println("Term:", termPackage.Term)
   fmt.Println("Series:", termPackage.Series)
+  fmt.Println("SourceTypes:", termPackage.SourceTypes)
   fmt.Println("Related:", termPackage.Related)
   fmt.Println("Sources:", termPackage.Sources)
   fmt.Println(related)
