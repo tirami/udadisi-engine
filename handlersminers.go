@@ -78,7 +78,6 @@ func AdminCreateMiner(w http.ResponseWriter, r *http.Request) {
 
 // Handles receipt of post from a Miner
 func MinerPost(w http.ResponseWriter, r *http.Request) {
-  fmt.Println(r.Body)
   decoder := json.NewDecoder(r.Body)
   var posts MinerPostsJSON
   err := decoder.Decode(&posts)
@@ -86,8 +85,8 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
     fmt.Println("Error:", err)
   }
 
-  fmt.Println("Post from Miner Id: ", posts.MinerId)
-  fmt.Println(posts)
+  //fmt.Println("Post from Miner Id: ", posts.MinerId)
+  //fmt.Println(posts)
 
   minerConv, _ := strconv.ParseInt(posts.MinerId, 10, 0)
   var miner Miner
@@ -115,13 +114,14 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
     url := post.Url
     posted := post.Datetime
     mined := post.MinedAt
+    /*
     fmt.Println("SourceURI ", url)
     fmt.Println("Posted ", posted)
     fmt.Println("Mined ", mined)
     fmt.Println("Terms and their counts")
     fmt.Println("Miner location ", miner.Location)
     fmt.Println("Miner source", miner.Source)
-
+    */
     lastInsertId := InsertPost(miner.Source, miner.Location, url, posted.Time, mined.Time)
     if lastInsertId != 0 {
       for k, v := range post.Terms {
