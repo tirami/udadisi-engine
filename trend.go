@@ -30,6 +30,7 @@ type Trends []Trend
 
 type Source struct {
   Source string `json:"source"`
+  Location string `json:"location"`
   SourceURI string `json:"source_uri"`
   Posted time.Time `json:"posted"`
   Mined time.Time `json:"mined"`

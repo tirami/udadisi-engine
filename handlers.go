@@ -492,6 +492,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
           checkErr(err)
           source := Source {
             Source: postSource,
+            Location: postLocation,
             SourceURI: sourceURI,
             Posted: postPosted,
           }

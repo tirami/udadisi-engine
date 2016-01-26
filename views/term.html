@@ -51,7 +51,7 @@
       <h3>Sources</h3>
       <ul>
         {{range $source := .TermPackage.Sources}}
-          <li>{{.Source}} : posted {{.Posted}} <a href="{{.SourceURI}}" target="_new">{{.SourceURI}}</a></li>
+          <li>{{.Source}} : {{.Location}} : posted {{.Posted}} <a href="{{.SourceURI}}" target="_new">{{.SourceURI}}</a></li>
         {{end}}
       </ul>
     </div>

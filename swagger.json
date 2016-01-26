@@ -296,6 +296,10 @@
                                                     "type": "string",
                                                     "description": "The type of source, e.g. Twitter, Blog, Journal"
                                                 },
+                                                "location": {
+                                                    "type": "string",
+                                                    "description": "The location of source associated to"
+                                                },
                                                 "source_uri": {
                                                     "type": "string",
                                                     "description": "URI of the source, e.g. Tweet URL"
