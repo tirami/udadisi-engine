@@ -98,13 +98,15 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
     var source string
     var location string
     var url string
-    err := rows.Scan(&uid, &name, &source, &location, &url)
+    var geoCoord Point
+    err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord)
     checkErr(err)
     miner = Miner {
       Uid: uid,
       Name: name,
       Source: source,
       Location: location,
+      GeoCoord: geoCoord,
       Url: url,
     }
   }
