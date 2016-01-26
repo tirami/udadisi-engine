@@ -334,38 +334,36 @@ func WordCountRootCollection(location string, source string, fromParam string, t
   serieses := map[string][]int {}
 
   for _, wordcount := range wordCounts {
-    if wordcount.Occurrences > 1 {
-      if _, ok := serieses[wordcount.Term]; ok {
-      } else {
-        serieses[wordcount.Term] = make([]int, int(interval))
-      }
+    if _, ok := serieses[wordcount.Term]; ok {
+    } else {
+      serieses[wordcount.Term] = make([]int, int(interval))
     }
   }
 
   for _, wordcount := range wordCounts {
-    if wordcount.Occurrences > 1 {
-      count := totalCounts[wordcount.Term]
-      count = count + wordcount.Occurrences
-      totalCounts[wordcount.Term] = count
-      serieses[wordcount.Term][wordcount.Sequence] = serieses[wordcount.Term][wordcount.Sequence] + 1
-    }
+    count := totalCounts[wordcount.Term]
+    count = count + wordcount.Occurrences
+    totalCounts[wordcount.Term] = count
+    serieses[wordcount.Term][wordcount.Sequence] = serieses[wordcount.Term][wordcount.Sequence] + 1
   }
 
   sortedCounts := WordCounts {}
 
   for _, res := range sortedKeys(totalCounts) {
     if limit == 0 || len(sortedCounts) < int(limit) {
-      // Calculate the velocity
-      seriesAverage := float64(totalCounts[res]) / float64(interval)
-      fmt.Println("Total:", totalCounts[res], "interval:", interval)
-      fmt.Println("Average:", seriesAverage)
+      if totalCounts[res] > 1 {
+        // Calculate the velocity
+        seriesAverage := float64(totalCounts[res]) / float64(interval)
+        fmt.Println("Total:", totalCounts[res], "interval:", interval)
+        fmt.Println("Average:", seriesAverage)
 
-      sortedCounts = append(sortedCounts, WordCount {
-                Term: res,
-                Occurrences: totalCounts[res],
-                Series: serieses[res],
-                Velocity: float64(serieses[res][interval - 1]) / seriesAverage,
-              })
+        sortedCounts = append(sortedCounts, WordCount {
+                  Term: res,
+                  Occurrences: totalCounts[res],
+                  Series: serieses[res],
+                  Velocity: float64(serieses[res][interval - 1]) / seriesAverage,
+                })
+      }
     }
   }
 
