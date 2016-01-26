@@ -334,17 +334,21 @@ func WordCountRootCollection(location string, source string, fromParam string, t
   serieses := map[string][]int {}
 
   for _, wordcount := range wordCounts {
-    if _, ok := serieses[wordcount.Term]; ok {
-    } else {
-      serieses[wordcount.Term] = make([]int, int(interval))
+    if wordcount.Occurrences > 1 {
+      if _, ok := serieses[wordcount.Term]; ok {
+      } else {
+        serieses[wordcount.Term] = make([]int, int(interval))
+      }
     }
   }
 
   for _, wordcount := range wordCounts {
-    count := totalCounts[wordcount.Term]
-    count = count + wordcount.Occurrences
-    totalCounts[wordcount.Term] = count
-    serieses[wordcount.Term][wordcount.Sequence] = serieses[wordcount.Term][wordcount.Sequence] + 1
+    if wordcount.Occurrences > 1 {
+      count := totalCounts[wordcount.Term]
+      count = count + wordcount.Occurrences
+      totalCounts[wordcount.Term] = count
+      serieses[wordcount.Term][wordcount.Sequence] = serieses[wordcount.Term][wordcount.Sequence] + 1
+    }
   }
 
   sortedCounts := WordCounts {}
