@@ -200,7 +200,7 @@ func QueryTerms(source string, location string, term string, fromDate string, to
         fmt.Errorf("invalid to date: %v", err)
     }
 
-    fmt.Println("Searching for:", term, "in", location, "between", fromTime.Format(time.RFC3339), "and", toTime.Format(time.RFC3339), "source", source)
+    //fmt.Println("Searching for:", term, "in", location, "between", fromTime.Format(time.RFC3339), "and", toTime.Format(time.RFC3339), "source", source)
 
     if term != "" {
         rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($4) || '%' AND terms.posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) AND (LOWER(source) = LOWER($5) OR $5 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location, source)
@@ -263,6 +263,7 @@ func DeletePost(db *sql.DB, uid int) {
 
 func checkErr(err error) {
     if err != nil {
+        fmt.Println("Error:", &DatabaseError{err})
         panic(&DatabaseError{err})
     }
 }

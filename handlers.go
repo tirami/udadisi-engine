@@ -60,7 +60,7 @@ func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
   if interval < 1 {
     interval = 2
   }
-  wordCounts := WordCountRootCollection(location, source, fromParam, toParam, int(interval), 0)
+  wordCounts, _ := WordCountRootCollection(location, source, fromParam, toParam, int(interval), 0)
 
   totalCounts := map[string]int {}
 
@@ -101,7 +101,7 @@ func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
   if interval < 1 {
     interval = 2
   }
-  sortedCounts := WordCountRootCollection(location, source, fromParam, toParam, int(interval), int(limit))
+  sortedCounts, _ := WordCountRootCollection(location, source, fromParam, toParam, int(interval), int(limit))
 
   w.Header().Add("Access-Control-Allow-Origin", "*")
   w.Header().Add("Access-Control-Allow-Methods", "GET")
@@ -200,9 +200,12 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   if interval < 1 {
     interval = 2
   }
-  sortedCounts := WordCountRootCollection(location, source, fromParam, toParam, int(interval), int(limit))
+  sortedCounts, err := WordCountRootCollection(location, source, fromParam, toParam, int(interval), int(limit))
 
   content := make(map[string]interface{})
+  if err != nil {
+    content["Error"] = err
+  }
   content["Title"] = "Main Index"
   content["Location"] = location
   content["FromParam"] = fromParam
@@ -264,7 +267,18 @@ func renderTemplate(w http.ResponseWriter, tmpl string, content map[string]inter
   }
 }
 
-func WordCountRootCollection(location string, source string, fromParam string, toParam string, interval int, limit int) WordCounts {
+func WordCountRootCollection(location string, source string, fromParam string, toParam string, interval int, limit int) (sortedCounts WordCounts,  collectionErr error) {
+
+  defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            collectionErr, ok = r.(error)
+            if !ok {
+                collectionErr = fmt.Errorf("WordCountRootCollection: %v", r)
+            }
+        }
+    }()
+
   wordCounts := WordCounts {}
 
   if location == "all" {
@@ -292,7 +306,7 @@ func WordCountRootCollection(location string, source string, fromParam string, t
   }
 
   duration := toTime.Sub(fromTime)
-  fmt.Println("duration ", duration.Minutes())
+  //fmt.Println("duration ", duration.Minutes())
   duration  = duration / time.Duration(interval)
 
   for i := 0; i < interval; i++ {
@@ -301,36 +315,32 @@ func WordCountRootCollection(location string, source string, fromParam string, t
     toParam = toTime.Format("200601021504")
 
     rows, err := QueryTerms(source, location, "", fromParam, toParam)
+    checkErr(err)
 
-    if err != nil {
-      fmt.Println(err)
-    } else {
-      fmt.Println("Terms found - now processing them")
-      for rows.Next() {
-        var uid int
-        var postid int
-        var term string
-        var wordcount int
-        var posted time.Time
-        var termLocation string
-        var termSource string
-        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation, &termSource)
-        checkErr(err)
-        wordCount := WordCount {
-          Term: term,
-          Occurrences: wordcount,
-          Series: []int{wordcount},
-          Sequence: i,
-        }
-        wordCounts = append(wordCounts, wordCount)
+    for rows.Next() {
+      var uid int
+      var postid int
+      var term string
+      var wordcount int
+      var posted time.Time
+      var termLocation string
+      var termSource string
+      err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation, &termSource)
+      checkErr(err)
+      wordCount := WordCount {
+        Term: term,
+        Occurrences: wordcount,
+        Series: []int{wordcount},
+        Sequence: i,
       }
+      wordCounts = append(wordCounts, wordCount)
     }
 
     fromTime = fromTime.Add(duration)
     fromParam = fromTime.Format("200601021504")
- }
+  }
 
- totalCounts := map[string]int {}
+  totalCounts := map[string]int {}
   serieses := map[string][]int {}
 
   for _, wordcount := range wordCounts {
@@ -347,15 +357,15 @@ func WordCountRootCollection(location string, source string, fromParam string, t
     serieses[wordcount.Term][wordcount.Sequence] = serieses[wordcount.Term][wordcount.Sequence] + 1
   }
 
-  sortedCounts := WordCounts {}
+  sortedCounts = WordCounts {}
 
   for _, res := range sortedKeys(totalCounts) {
     if limit == 0 || len(sortedCounts) < int(limit) {
       if totalCounts[res] > 1 {
         // Calculate the velocity
         seriesAverage := float64(totalCounts[res]) / float64(interval)
-        fmt.Println("Total:", totalCounts[res], "interval:", interval)
-        fmt.Println("Average:", seriesAverage)
+        //fmt.Println("Total:", totalCounts[res], "interval:", interval)
+        //fmt.Println("Average:", seriesAverage)
 
         sortedCounts = append(sortedCounts, WordCount {
                   Term: res,
@@ -367,7 +377,7 @@ func WordCountRootCollection(location string, source string, fromParam string, t
     }
   }
 
-  return sortedCounts
+  return
 }
 
 func MinersCollection() (miners Miners, err error) {
@@ -428,7 +438,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
   }
 
   duration := toTime.Sub(fromTime)
-  fmt.Println("duration ", duration.Minutes())
+  //fmt.Println("duration ", duration.Minutes())
   duration  = duration / time.Duration(interval)
 
   termPackage := TermPackage {
@@ -459,7 +469,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
         var location string
         var source string
         err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location, &source)
-        fmt.Println(uid, postid, term, wordcount, posted, location)
+        //fmt.Println(uid, postid, term, wordcount, posted, location)
         checkErr(err)
         termPackage.Series[i] = termPackage.Series[i] + wordcount
         totalOccurrences = totalOccurrences + wordcount
@@ -525,10 +535,11 @@ func TrendsCollection(source string, location string, term string, fromParam str
 
   // Calculate the velocity
   seriesAverage := float64(totalOccurrences) / float64(interval)
-  fmt.Println("Total:", totalOccurrences, "interval:", interval)
-  fmt.Println("Average:", seriesAverage)
+  //fmt.Println("Total:", totalOccurrences, "interval:", interval)
+  //fmt.Println("Average:", seriesAverage)
   termPackage.Velocity = float64(termPackage.Series[interval - 1]) / seriesAverage
 
+  /*
   fmt.Println("Term:", termPackage.Term)
   fmt.Println("Series:", termPackage.Series)
   fmt.Println("SourceTypes:", termPackage.SourceTypes)
@@ -536,6 +547,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
   fmt.Println("Sources:", termPackage.Sources)
   fmt.Println(related)
   fmt.Println(termPackage)
+  */
 
   return termPackage
 }
