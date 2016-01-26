@@ -59,14 +59,6 @@ type SourceType struct {
   Series []int `json:"series"`
 }
 
-type Seed struct {
-  Miner string `json:"miner"`
-  Location string `json:"location"`
-  Source string `json:"source"`
-}
-
-type Seeds []Seed
-
 type Location struct {
   Name string `json:"name"`
   GeoCoord Point `json:"geo_coord"`
