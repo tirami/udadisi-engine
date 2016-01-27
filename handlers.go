@@ -212,6 +212,7 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   content["ToParam"] = toParam
   content["Interval"] = int(interval)
   content["SortedCounts"] = sortedCounts
+  content["VelocityMidPoint"] = 0.0
 
   renderTemplate(w, "termsindex", content)
 }
@@ -357,8 +358,38 @@ func WordCountRootCollection(location string, source string, fromParam string, t
     serieses[wordcount.Term][wordcount.Sequence] = serieses[wordcount.Term][wordcount.Sequence] + 1
   }
 
-  sortedCounts = WordCounts {}
+  velocityCounts := map[string]WordCount {}
 
+  // For ordering by velocity
+  for key, _ := range totalCounts {
+    if totalCounts[key] > 1 {
+        // Calculate the velocity
+        //seriesAverage := float64(totalCounts[key]) / float64(interval - 1)
+        velocity := 0.0
+        if serieses[key][interval - 2] == 0 {
+          velocity = float64(serieses[key][interval - 1])
+        } else {
+          velocity = (float64(serieses[key][interval - 1]) - float64(serieses[key][interval - 2])) / float64(serieses[key][interval - 2])
+        }
+
+        velocityCounts[key] = WordCount {
+                  Term: key,
+                  Occurrences: totalCounts[key],
+                  Series: serieses[key],
+                  Velocity: velocity,
+                }
+      }
+  }
+
+  sortedCounts = WordCounts {}
+  for _, res := range sortedWordCountKeys(velocityCounts) {
+    sortedCounts = append(sortedCounts, velocityCounts[res])
+  }
+
+
+  // For ordering by occurrances
+  /*
+  sortedCounts = WordCounts {}
   for _, res := range sortedKeys(totalCounts) {
     if limit == 0 || len(sortedCounts) < int(limit) {
       if totalCounts[res] > 1 {
@@ -376,6 +407,7 @@ func WordCountRootCollection(location string, source string, fromParam string, t
       }
     }
   }
+  */
 
   return
 }
