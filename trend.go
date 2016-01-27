@@ -50,9 +50,14 @@ type TermPackage struct {
   Term string `json:"term"`
   Velocity float64 `json:"velocity"`
   Series []int `json:"series"`
-  Related []string `json:"related"`
+  Related []Related `json:"related"`
   SourceTypes []SourceType `json:"source_types"`
   Sources []Source `json:"sources"`
+}
+
+type Related struct {
+  Term string `json:"term"`
+  Occurrences  int `json:"occurrences"`
 }
 
 type SourceType struct {

@@ -530,8 +530,14 @@ func TrendsCollection(source string, location string, term string, fromParam str
       })
   }
 
-  for key, _ := range related {
-    termPackage.Related = append(termPackage.Related, key)
+  for _, res := range sortedKeys(related) {
+    // Exclude the term we are finding related terms for
+    if term != res {
+      termPackage.Related = append(termPackage.Related, Related {
+        Term: res,
+        Occurrences: related[res],
+        })
+    }
   }
 
   // Calculate the velocity

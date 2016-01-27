@@ -283,7 +283,17 @@
                                     "type": "array",
                                     "description": "All the terms that appear in the same sources as the requested term",
                                     "items": {
-                                        "type": "string"
+                                        "title": "Related",
+                                        "type": "object",
+                                        "properties": {
+                                            "term": {
+                                                "type": "string",
+                                                "description": "The related term"
+                                                },
+                                            "occurances": {
+                                              "type": "integer"
+                                            }
+                                        }
                                     }
                                 },
                                  "sources": {

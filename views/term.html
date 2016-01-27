@@ -45,7 +45,7 @@
 
       <h3>Related</h3>
       {{range .TermPackage.Related}}
-        <a href="{{.}}?from={{$fromParam}}&=to={{$toParam}}&interval={{$interval}}">{{.}}</a>,
+        <a href="{{.Term}}?from={{$fromParam}}&=to={{$toParam}}&interval={{$interval}}"><span class="badge">{{.Occurrences}}</span> {{.Term}}</a>,
       {{end}}
 
       <h3>Sources</h3>
