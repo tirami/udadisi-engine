@@ -72,6 +72,14 @@ func ResetMinersDatabase() {
     CreateTable(CREATE[MinersTable])
 }
 
+func ClearData() {
+
+    DropTable(DROP[Posts])
+    DropTable(DROP[Terms])
+    CreateTable(CREATE[Posts])
+    CreateTable(CREATE[Terms])
+}
+
 func CountWords(s string) map[string]int {
   counts := make(map[string]int)
   fields := strings.Fields(s)

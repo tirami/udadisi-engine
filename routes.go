@@ -91,6 +91,12 @@ var routes = Routes{
         AdminBuildDatabase,
     },
     Route{
+        "AdminClearData",
+        "GET",
+        "/admin/cleardata",
+        AdminClearData,
+    },
+    Route{
         "AdminMiners",
         "GET",
         "/admin/miners",

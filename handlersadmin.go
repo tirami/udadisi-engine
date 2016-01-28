@@ -19,3 +19,10 @@ func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<p>Database built</p>")
   fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
 }
+
+func AdminClearData(w http.ResponseWriter, r *http.Request) {
+
+  ClearData()
+
+  AdminIndex(w, r)
+}
