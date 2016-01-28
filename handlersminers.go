@@ -125,7 +125,7 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
     lastInsertId := InsertPost(miner.Source, miner.Location, url, posted.Time, mined.Time)
     if lastInsertId != 0 {
       for k, v := range post.Terms {
-        fmt.Println(k, v)
+        //fmt.Println(k, v)
         InsertTerm(miner.Location, k, v, lastInsertId, posted.Time)
       }
     }
