@@ -3,10 +3,10 @@ package main
 import (
   "log"
   "net/http"
-  "database/sql"
+  "github.com/jmoiron/sqlx"
 )
 
-var db *sql.DB = ConnectToDatabase()
+var db *sqlx.DB = ConnectToDatabase()
 
 func main() {
 

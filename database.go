@@ -2,6 +2,7 @@ package main
 
 import (
     "database/sql"
+    "github.com/jmoiron/sqlx"
     "fmt"
     "strings"
     //"regexp"
@@ -89,7 +90,7 @@ func CountWords(s string) map[string]int {
   return counts
 }
 
-func ConnectToDatabase() *sql.DB {
+func ConnectToDatabase() *sqlx.DB {
     host := os.Getenv("POSTGRES_DB")
     if host == "" {
         host = "localhost"
@@ -102,7 +103,7 @@ func ConnectToDatabase() *sql.DB {
 
     dbinfo := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
         host, DB_USER, password, DB_NAME)
-    db, err := sql.Open("postgres", dbinfo)
+    db, err := sqlx.Open("postgres", dbinfo)
     checkErr(err)
 
     return db
@@ -256,7 +257,7 @@ func QueryAll() {
     }
 }
 
-func DeletePost(db *sql.DB, uid int) {
+func DeletePost(db *sqlx.DB, uid int) {
     stmt, err := db.Prepare("delete from posts where uid=$1")
     checkErr(err)
 
