@@ -73,12 +73,22 @@ func ResetMinersDatabase() {
     CreateTable(CREATE[MinersTable])
 }
 
-func ClearData() {
+func ClearData() (err error) {
 
-    DropTable(DROP[Posts])
-    DropTable(DROP[Terms])
-    CreateTable(CREATE[Posts])
-    CreateTable(CREATE[Terms])
+    if err := DropTable(DROP[Posts]); err != nil {
+        checkErr(err)
+    }
+    if err := DropTable(DROP[Terms]); err != nil {
+        checkErr(err)
+    }
+    if err := CreateTable(CREATE[Posts]); err != nil {
+        checkErr(err)
+    }
+    if err := CreateTable(CREATE[Terms]); err != nil {
+        checkErr(err)
+    }
+
+    return
 }
 
 func CountWords(s string) map[string]int {
@@ -109,20 +119,44 @@ func ConnectToDatabase() *sqlx.DB {
     return db
 }
 
-func CreateTable(sql string) {
+func CreateTable(sql string) (err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
     fmt.Println("# Creating table " + sql)
 
     if _, err := db.Exec(sql); err != nil {
         checkErr(err)
     }
+
+    return
 }
 
-func DropTable(sql string) {
+func DropTable(sql string) (err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
     fmt.Println("# Dropping table " + sql)
     db := ConnectToDatabase()
     if _, err := db.Exec(sql); err != nil {
         checkErr(err)
     }
+
+    return
 }
 
 func InsertMiner(name string, location string, latitude string, longitude string, source string, url string) (lastInsertId int, err error) {

@@ -10,6 +10,8 @@ var db *sqlx.DB = ConnectToDatabase()
 
 func main() {
 
+  db.SetMaxOpenConns(1000) //tune this
+
   router := NewRouter()
   //BuildDatabase()
   defer db.Close()

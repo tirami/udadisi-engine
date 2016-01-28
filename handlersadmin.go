@@ -21,8 +21,13 @@ func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
 }
 
 func AdminClearData(w http.ResponseWriter, r *http.Request) {
+  content := make(map[string]interface{})
+  content["Title"] = "Admin Home Page"
 
-  ClearData()
+  err := ClearData()
+  if err != nil {
+    content["Error"] = err
+  }
 
-  AdminIndex(w, r)
+  renderTemplate(w, "admin/index", content)
 }
