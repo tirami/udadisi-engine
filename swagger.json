@@ -111,7 +111,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "top number of word counts to return, defaults to 10",
+                        "description": "top number of velocity rankings to return, defaults to 10",
                         "required": false,
                         "type": "integer"
                     },

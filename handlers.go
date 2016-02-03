@@ -86,6 +86,9 @@ func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
   source := r.URL.Query().Get("source")
   limitParam := r.URL.Query().Get("limit")
   limit, _ := strconv.ParseInt(limitParam, 10, 0)
+  if limit < 1 {
+    limit = 10
+  }
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
@@ -185,6 +188,9 @@ func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {
   source := r.URL.Query().Get("source")
   limitParam := r.URL.Query().Get("limit")
   limit, _ := strconv.ParseInt(limitParam, 10, 0)
+  if limit < 1 {
+    limit = 10
+  }
   intervalParam := r.URL.Query().Get("interval")
   interval, _ := strconv.ParseInt(intervalParam, 10, 0)
   fromParam := r.URL.Query().Get("from")
@@ -360,32 +366,44 @@ func WordCountRootCollection(location string, source string, fromParam string, t
 
   velocityCounts := map[string]WordCount {}
 
+
   // For ordering by velocity
   for key, _ := range totalCounts {
     if totalCounts[key] > 1 {
-        // Calculate the velocity
-        //seriesAverage := float64(totalCounts[key]) / float64(interval - 1)
-        velocity := 0.0
-        if serieses[key][interval - 2] == 0 {
-          velocity = float64(serieses[key][interval - 1])
-        } else {
-          velocity = (float64(serieses[key][interval - 1]) - float64(serieses[key][interval - 2])) / float64(serieses[key][interval - 2])
-        }
 
-        velocityCounts[key] = WordCount {
-                  Term: key,
-                  Occurrences: totalCounts[key],
-                  Series: serieses[key],
-                  Velocity: velocity,
-                }
+      // Calculate the velocity
+      //seriesAverage := float64(totalCounts[key]) / float64(interval - 1)
+      velocity := 0.0
+      if serieses[key][interval - 2] == 0 {
+        velocity = float64(serieses[key][interval - 1])
+      } else {
+        velocity = (float64(serieses[key][interval - 1]) - float64(serieses[key][interval - 2])) / float64(serieses[key][interval - 2])
+      }
+
+      velocityCounts[key] = WordCount {
+                Term: key,
+                Occurrences: totalCounts[key],
+                Series: serieses[key],
+                Velocity: velocity,
+              }
       }
   }
 
+  rankings := map[float64]int {}
+
   sortedCounts = WordCounts {}
   for _, res := range sortedWordCountKeys(velocityCounts) {
+    if _, ok := rankings[velocityCounts[res].Velocity]; ok {
+        rankings[velocityCounts[res].Velocity]++
+      } else {
+        rankings[velocityCounts[res].Velocity] = 1
+      }
+
+      if len(rankings) > limit {
+        break
+      }
     sortedCounts = append(sortedCounts, velocityCounts[res])
   }
-
 
   // For ordering by occurrances
   /*
