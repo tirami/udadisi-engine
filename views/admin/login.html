@@ -21,7 +21,6 @@
             <li class="active"><a href="/admin/">Admin Home</a></li>
             <li><a href="/admin/miners">Miners Admin</a></li>
             <li><a href="/developer/" target="_blank">API Docs powered by Swagger</a></li>
-            <li><a href="/admin/logout">Log out</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -33,22 +32,26 @@
       {{ if .Error }}
         <div class="alert alert-danger" role="alert">{{.Error}}</div>
       {{ end }}
+        <form action="/admin/login" method="post" class="form-horizontal">
+          <div class="form-group">
+            <label for="username" class="col-sm-2 control-label">Username</label>
+            <div class="col-sm-4">
+              <input type="text" name="username" class="form-control" placeholder="Username">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password" class="col-sm-2 control-label">Password</label>
+            <div class="col-sm-4">
+              <input type="text" name="password" class="form-control" placeholder="Password">
+            </div>
+          </div>
 
-      <div class="row">
-        <div class="col-sm-offset-2 col-sm-4">
-          <div class="alert alert-danger" role="alert">
-            <p>Building the database will delete any existing data.</p>
-            <a href="/admin/builddatabase" class="btn btn-danger">Build Database</a>
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-4">
+              <button type="submit" class="btn btn-default">Sign In</button>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-offset-2 col-sm-4">
-          <div class="alert alert-danger" role="alert">
-            <p>Remove all data but leave miners intact.</p>
-            <a href="/admin/cleardata" class="btn btn-danger">Clear Data</a>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   </body>

@@ -54,6 +54,8 @@ The server uses the following environment variables:
 
 * POSTGRES_DB - database host address (defaults to localhost if not set)
 * DB_PASSWORD - db user password (defaults to udadisi if not set)
+* ADMIN_USERNAME - username for logging into admin suite
+* ADMIN_PASSWORD - password for logging into admin suite
 
 ### Setting up Postgres database
     createuser --createdb --login -P udadisi

@@ -10,70 +10,108 @@ import (
 
 // Miners admin home page
 func AdminMiners(w http.ResponseWriter, r *http.Request) {
-  miners, err :=  MinersCollection()
-  content := make(map[string]interface{})
 
-  content["Title"] = "Miners Admin"
+  sess, err := globalSessions.SessionStart(w, r)
   if err != nil {
-    content["Error"] = "Miners database table not yet created"
-  } else {
-    content["Miners"] = miners
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
   }
-  renderTemplate(w, "admin/miners/index", content)
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
+  } else {
+    miners, err :=  MinersCollection()
+    content := make(map[string]interface{})
+
+    content["Title"] = "Miners Admin"
+    if err != nil {
+      content["Error"] = "Miners database table not yet created"
+    } else {
+      content["Miners"] = miners
+    }
+    renderTemplate(w, "admin/miners/index", content)
+  }
 }
 
 func AdminMinersResetDatabase(w http.ResponseWriter, r *http.Request) {
 
-  ResetMinersDatabase()
+  sess, err := globalSessions.SessionStart(w, r)
+  if err != nil {
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
+  }
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
+  } else {
+    ResetMinersDatabase()
 
-  AdminMiners(w, r)
+    AdminMiners(w, r)
+  }
 }
 
 // Creates a new miner
 func AdminCreateMiner(w http.ResponseWriter, r *http.Request) {
-  err := r.ParseForm()
+  sess, err := globalSessions.SessionStart(w, r)
   if err != nil {
-    fmt.Println(err)
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
   }
-
-  content := make(map[string]interface{})
-
-  name := r.PostFormValue("name")
-  url := r.PostFormValue("url")
-  location := r.PostFormValue("location")
-  latitude := r.PostFormValue("latitude")
-  longitude := r.PostFormValue("longitude")
-  source := r.PostFormValue("source")
-  lastInsertId, err := InsertMiner(name, location, latitude, longitude, source, url)
-  if err != nil {
-    content["MinerError"] = err
-  }
-  sendIdUrl := fmt.Sprintf("%s/categories", url)
-  idData := fmt.Sprintf("{\"id\":\"%d\"}", lastInsertId)
-
-  var jsonStr = []byte(idData)
-  req, err := http.NewRequest("POST", sendIdUrl, bytes.NewBuffer(jsonStr))
-  req.Header.Set("Content-Type", "application/json")
-
-  client := &http.Client{}
-  resp, err := client.Do(req)
-  if err == nil {
-    defer resp.Body.Close()
-  }
-
-  content["Title"] = "Miners Admin"
-  if err != nil {
-    content["MinerError"] = err
-  }
-
-  miners, err :=  MinersCollection()
-  if err != nil {
-    content["Error"] = "Miners database table not yet created"
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
   } else {
-    content["Miners"] = miners
-  }
 
-  renderTemplate(w, "admin/miners/index", content)
+    err := r.ParseForm()
+    if err != nil {
+      fmt.Println(err)
+    }
+
+    content := make(map[string]interface{})
+
+    name := r.PostFormValue("name")
+    url := r.PostFormValue("url")
+    location := r.PostFormValue("location")
+    latitude := r.PostFormValue("latitude")
+    longitude := r.PostFormValue("longitude")
+    source := r.PostFormValue("source")
+    lastInsertId, err := InsertMiner(name, location, latitude, longitude, source, url)
+    if err != nil {
+      content["MinerError"] = err
+    }
+    sendIdUrl := fmt.Sprintf("%s/categories", url)
+    idData := fmt.Sprintf("{\"id\":\"%d\"}", lastInsertId)
+
+    var jsonStr = []byte(idData)
+    req, err := http.NewRequest("POST", sendIdUrl, bytes.NewBuffer(jsonStr))
+    req.Header.Set("Content-Type", "application/json")
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err == nil {
+      defer resp.Body.Close()
+    }
+
+    content["Title"] = "Miners Admin"
+    if err != nil {
+      content["MinerError"] = err
+    }
+
+    miners, err :=  MinersCollection()
+    if err != nil {
+      content["Error"] = "Miners database table not yet created"
+    } else {
+      content["Miners"] = miners
+    }
+
+    renderTemplate(w, "admin/miners/index", content)
+  }
 }
 
 // Handles receipt of post from a Miner
