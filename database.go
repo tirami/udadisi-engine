@@ -10,6 +10,7 @@ import (
     "time"
     "bytes"
     "os"
+    "hash/fnv"
 )
 
 const (
@@ -34,9 +35,9 @@ var datetime = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 
 // Post: uid serial mined:datetime posted:datetime sourceURI: string
 var CREATE = map[int]string{
-    Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text, location text, source text)",
-    Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone, location text)",
-    MinersTable: "CREATE TABLE IF NOT EXISTS miners(uid serial NOT NULL, name text, source text, location text, url text, geocoord point)",
+    Posts: "CREATE TABLE IF NOT EXISTS posts(uid serial NOT NULL, mined timestamp without time zone, posted timestamp without time zone, sourceURI text, location text, source text, locationhash bigint)",
+    Terms: "CREATE TABLE IF NOT EXISTS terms(uid serial NOT NULL, postid integer, term text,  wordcount integer, posted timestamp without time zone, location text, locationhash bigint)",
+    MinersTable: "CREATE TABLE IF NOT EXISTS miners(uid serial NOT NULL, name text, source text, location text, url text, geocoord point, locationhash bigint)",
 }
 
 var DROP = map[int]string{
@@ -44,8 +45,6 @@ var DROP = map[int]string{
     Terms: "DROP TABLE IF EXISTS terms",
     MinersTable: "DROP TABLE IF EXISTS miners",
 }
-
-
 
 // A DatabaseError indicates an error with the database
 type DatabaseError struct {
@@ -57,6 +56,11 @@ func (e *DatabaseError) String() string {
     return fmt.Sprintf("%s", e.Error)
 }
 
+func LocationHash(s string) uint32 {
+    h := fnv.New32a()
+    h.Write([]byte(s))
+    return h.Sum32()
+}
 
 func BuildDatabase() {
 
@@ -66,15 +70,16 @@ func BuildDatabase() {
     CreateTable(CREATE[Posts])
     CreateTable(CREATE[Terms])
     CreateTable(CREATE[MinersTable])
+    CreateIndexes()
 }
 
 func CreateIndexes() {
     CreateIndex("CREATE INDEX ON posts (uid);")
     CreateIndex("CREATE INDEX ON terms (uid);")
     CreateIndex("CREATE INDEX ON miners (uid);")
-    CreateIndex("CREATE INDEX ON posts ((lower(location)));")
-    CreateIndex("CREATE INDEX ON terms ((lower(location)));")
-    CreateIndex("CREATE INDEX ON miners ((lower(location)));")
+    CreateIndex("CREATE INDEX ON posts (locationhash);")
+    CreateIndex("CREATE INDEX ON terms (locationhash);")
+    CreateIndex("CREATE INDEX ON miners (locationhash);")
 }
 
 func ResetMinersDatabase() {
@@ -199,7 +204,16 @@ func InsertMiner(name string, location string, latitude string, longitude string
         }
     }()
 
-    err = db.QueryRow("INSERT INTO miners (name, location, geocoord, source, url) VALUES($1,$2,POINT($3,$4),$5,$6) returning uid;", name, location, latitude, longitude, source, url).Scan(&lastInsertId)
+    if latitude == "" {
+        latitude = "0"
+    }
+    if longitude == "" {
+        longitude = "0"
+    }
+
+    fmt.Println(LocationHash(location))
+
+    err = db.QueryRow("INSERT INTO miners (name, location, geocoord, source, url, locationhash) VALUES($1,$2,POINT($3,$4),$5,$6,$7) returning uid;", name, location, latitude, longitude, source, url, LocationHash(location)).Scan(&lastInsertId)
     checkErr(err)
 
     return
@@ -207,7 +221,7 @@ func InsertMiner(name string, location string, latitude string, longitude string
 
 func InsertTerm(location string, term string, wordcount int, postid int, posted time.Time) {
     var lastInsertId int
-    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted, location) VALUES($1,$2,$3,$4,$5) returning uid;", postid, strings.ToLower(term), wordcount, posted.Format(time.RFC3339), location).Scan(&lastInsertId)
+    err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted, location, locationhash) VALUES($1,$2,$3,$4,$5,$6) returning uid;", postid, strings.ToLower(term), wordcount, posted.Format(time.RFC3339), location,LocationHash(location)).Scan(&lastInsertId)
     checkErr(err)
 }
 
@@ -216,10 +230,10 @@ func InsertPost(source string, location string, sourceURI string, postedAt time.
 
     // Check to see if we already have an entry for the sourceURI
     duplicate := false
-    db.QueryRow("SELECT 1 FROM posts WHERE sourceURI=$1 AND location=$2", sourceURI, location).Scan(&duplicate)
+    db.QueryRow("SELECT 1 FROM posts WHERE sourceURI=$1 AND locationhash=$2", sourceURI, LocationHash(location)).Scan(&duplicate)
 
     if duplicate == false {
-       err := db.QueryRow("INSERT INTO posts (source, location, mined, posted, sourceURI) VALUES($1,$2,$3,$4,$5) returning uid;", source, location, minedAt.Format(time.RFC3339), postedAt.Format(time.RFC3339), sourceURI).Scan(&lastInsertId)
+       err := db.QueryRow("INSERT INTO posts (source, location, mined, posted, sourceURI, locationhash) VALUES($1,$2,$3,$4,$5,$6) returning uid;", source, location, minedAt.Format(time.RFC3339), postedAt.Format(time.RFC3339), sourceURI,LocationHash(location)).Scan(&lastInsertId)
         checkErr(err)
     }
 
@@ -272,12 +286,20 @@ func QueryTerms(source string, location string, term string, fromDate string, to
         fmt.Errorf("invalid to date: %v", err)
     }
 
-    //fmt.Println("Searching for:", term, "in", location, "between", fromTime.Format(time.RFC3339), "and", toTime.Format(time.RFC3339), "source", source)
+    if location != "" {
+        locationhash := LocationHash(location)
 
-    if term != "" {
-        rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($4) || '%' AND terms.posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) AND (LOWER(source) = LOWER($5) OR $5 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, location, source)
+        if term != "" {
+            rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND posts.locationhash = $4 AND terms.posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) AND (LOWER(source) = LOWER($5) OR $5 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, locationhash, source)
+        } else {
+            rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND posts.locationhash = $3 AND terms.posted between $1 AND $2 AND (LOWER(posts.source) = LOWER($4) OR $4 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), locationhash, source)
+        }
     } else {
-        rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND LOWER(posts.location) LIKE '%' || LOWER($3) || '%' AND terms.posted between $1 AND $2 AND (LOWER(posts.source) = LOWER($4) OR $4 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), location, source)
+        if term != "" {
+            rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND terms.posted between $1 AND $2 AND LOWER(term) LIKE LOWER($3) AND (LOWER(source) = LOWER($4) OR $4 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), term, source)
+        } else {
+            rows, err = db.Query("SELECT terms.*, posts.source FROM terms, posts WHERE terms.postid=posts.uid AND terms.posted between $1 AND $2 AND (LOWER(posts.source) = LOWER($3) OR $3 = '') ORDER BY terms.posted, term", fromTime.Format(time.RFC3339), toTime.Format(time.RFC3339), source)
+        }
     }
     checkErr(err)
     return

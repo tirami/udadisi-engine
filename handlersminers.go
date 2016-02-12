@@ -136,7 +136,8 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
     var location string
     var url string
     var geoCoord Point
-    err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord)
+    var locationHash int
+    err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord, &locationHash)
     checkErr(err)
     miner = Miner {
       Uid: uid,

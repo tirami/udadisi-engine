@@ -331,8 +331,9 @@ func WordCountRootCollection(location string, source string, fromParam string, t
       var wordcount int
       var posted time.Time
       var termLocation string
+      var locationHash int
       var termSource string
-      err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation, &termSource)
+      err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &termLocation, &locationHash, &termSource)
       checkErr(err)
       wordCount := WordCount {
         Term: term,
@@ -444,7 +445,8 @@ func MinersCollection() (miners Miners, err error) {
       var location string
       var url string
       var geoCoord Point
-      err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord)
+      var locationHash int
+      err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord, &locationHash)
       checkErr(err)
       miner := Miner {
         Uid: uid,
@@ -517,8 +519,9 @@ func TrendsCollection(source string, location string, term string, fromParam str
         var wordcount int
         var posted time.Time
         var location string
+        var locationHash int
         var source string
-        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location, &source)
+        err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location, &locationHash, &source)
         //fmt.Println(uid, postid, term, wordcount, posted, location)
         checkErr(err)
         termPackage.Series[i] = termPackage.Series[i] + wordcount
@@ -538,7 +541,8 @@ func TrendsCollection(source string, location string, term string, fromParam str
           var sourceURI string
           var postLocation string
           var postSource string
-          err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI, &postLocation, &postSource)
+          var postLocationHash int
+          err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI, &postLocation, &postSource, &postLocationHash)
           checkErr(err)
           source := Source {
             Source: postSource,
@@ -555,8 +559,9 @@ func TrendsCollection(source string, location string, term string, fromParam str
               var wordcount int
               var wcPosted time.Time
               var wcLocation string
+              var wcLocationHash int
               var wcSource string
-              err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted, &wcLocation, &wcSource)
+              err := termsRows.Scan(&wcuid, &wcpostid, &wcTerm, &wordcount, &wcPosted, &wcLocation, &wcLocationHash, &wcSource)
               checkErr(err)
               if _, ok := related[wcTerm]; ok {
                 related[wcTerm] += wordcount
