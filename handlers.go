@@ -599,9 +599,11 @@ func TrendsCollection(source string, location string, term string, fromParam str
   seriesAverage := float64(totalOccurrences) / float64(interval)
   //fmt.Println("Total:", totalOccurrences, "interval:", interval)
   //fmt.Println("Average:", seriesAverage)
-  termPackage.Velocity = float64(termPackage.Series[interval - 1]) / seriesAverage
+  if seriesAverage != 0 {
+    termPackage.Velocity = float64(termPackage.Series[interval - 1]) / seriesAverage
+  }
 
-  /*
+
   fmt.Println("Term:", termPackage.Term)
   fmt.Println("Series:", termPackage.Series)
   fmt.Println("SourceTypes:", termPackage.SourceTypes)
@@ -609,7 +611,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
   fmt.Println("Sources:", termPackage.Sources)
   fmt.Println(related)
   fmt.Println(termPackage)
-  */
+
 
   return termPackage
 }
