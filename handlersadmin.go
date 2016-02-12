@@ -44,6 +44,26 @@ func AdminBuildDatabase(w http.ResponseWriter, r *http.Request) {
   }
 }
 
+func AdminCreateIndexes(w http.ResponseWriter, r *http.Request) {
+  sess, err := globalSessions.SessionStart(w, r)
+  if err != nil {
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
+  }
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
+  } else {
+    CreateIndexes()
+
+    fmt.Fprintf(w, "<a href=\"/\">Home</a>")
+    fmt.Fprintf(w, "<p>Indexes built</p>")
+    fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
+  }
+}
+
 func AdminClearData(w http.ResponseWriter, r *http.Request) {
   sess, err := globalSessions.SessionStart(w, r)
   if err != nil {

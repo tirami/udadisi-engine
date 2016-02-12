@@ -109,6 +109,12 @@ var routes = Routes{
         AdminBuildDatabase,
     },
     Route{
+        "AdminCreateIndexes",
+        "GET",
+        "/admin/createindexes",
+        AdminCreateIndexes,
+    },
+    Route{
         "AdminClearData",
         "GET",
         "/admin/cleardata",

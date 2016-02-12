@@ -68,6 +68,12 @@ func BuildDatabase() {
     CreateTable(CREATE[MinersTable])
 }
 
+func CreateIndexes() {
+    CreateIndex("CREATE INDEX ON posts ((lower(location)));")
+    CreateIndex("CREATE INDEX ON terms ((lower(location)));")
+    CreateIndex("CREATE INDEX ON miners ((lower(location)));")
+}
+
 func ResetMinersDatabase() {
     DropTable(DROP[MinersTable])
     CreateTable(CREATE[MinersTable])
@@ -117,6 +123,26 @@ func ConnectToDatabase() *sqlx.DB {
     checkErr(err)
 
     return db
+}
+
+func CreateIndex(sql string) (err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
+    fmt.Println("# Creating index " + sql)
+
+    if _, err := db.Exec(sql); err != nil {
+        checkErr(err)
+    }
+
+    return
 }
 
 func CreateTable(sql string) (err error) {
