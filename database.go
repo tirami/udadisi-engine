@@ -69,6 +69,9 @@ func BuildDatabase() {
 }
 
 func CreateIndexes() {
+    CreateIndex("CREATE INDEX ON posts (uid);")
+    CreateIndex("CREATE INDEX ON terms (uid);")
+    CreateIndex("CREATE INDEX ON miners (uid);")
     CreateIndex("CREATE INDEX ON posts ((lower(location)));")
     CreateIndex("CREATE INDEX ON terms ((lower(location)));")
     CreateIndex("CREATE INDEX ON miners ((lower(location)));")
