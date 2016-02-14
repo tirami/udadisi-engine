@@ -61,7 +61,7 @@ func WebStats(w http.ResponseWriter, r *http.Request) {
   content := make(map[string]interface{})
   content["Title"] = "System Stats"
   if err != nil {
-    content["Error"] = "Miners database table not yet created"
+    content["Error"] = err
   } else {
     content["Locations"] = locations
     content["PostsCount"] = postsCount
