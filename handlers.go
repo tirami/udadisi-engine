@@ -549,6 +549,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
             Location: postLocation,
             SourceURI: sourceURI,
             Posted: postPosted,
+            Mined: mined,
           }
           termPackage.Sources = append(termPackage.Sources, source)
           termsRows := QueryTermsForPost(thisPostuid)
@@ -603,7 +604,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
     termPackage.Velocity = float64(termPackage.Series[interval - 1]) / seriesAverage
   }
 
-
+  /*
   fmt.Println("Term:", termPackage.Term)
   fmt.Println("Series:", termPackage.Series)
   fmt.Println("SourceTypes:", termPackage.SourceTypes)
@@ -611,7 +612,7 @@ func TrendsCollection(source string, location string, term string, fromParam str
   fmt.Println("Sources:", termPackage.Sources)
   fmt.Println(related)
   fmt.Println(termPackage)
-
+  */
 
   return termPackage
 }

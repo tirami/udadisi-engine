@@ -49,11 +49,24 @@
       {{end}}
 
       <h3>Sources</h3>
-      <ul>
+      <table class="table table-striped">
+        <tr>
+          <th>Source</th>
+          <th>Location</th>
+          <th>Posted</th>
+          <th>Mined</th>
+          <th>Source URI</th>
+        </tr>
         {{range $source := .TermPackage.Sources}}
-          <li>{{.Source}} : {{.Location}} : posted {{.Posted}} <a href="{{.SourceURI}}" target="_new">{{.SourceURI}}</a></li>
+          <tr>
+            <td>{{.Source}}</td>
+            <td>{{.Location}}</td>
+            <td>{{.Posted.Format "02 Jan 2006 15:04:05"}}</td>
+            <td>{{.Mined.Format "02 Jan 2006 15:04:05"}}</td>
+            <td><a href="{{.SourceURI}}" target="_new">{{.SourceURI}}</a></td>
+          </tr>
         {{end}}
-      </ul>
+      </table>
     </div>
   </body>
 </html>
