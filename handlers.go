@@ -26,6 +26,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
     t := time.Now()
     lastWeek := t.Add(-24 * time.Hour * 7)
     content["LastWeek"] = lastWeek.Format("200601021504")
+    lastMonth := t.Add(-24 * time.Hour * 7 * 4)
+    content["LastMonth"] = lastMonth.Format("200601021504")
   }
   renderTemplate(w, "index", content)
 }

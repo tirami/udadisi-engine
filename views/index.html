@@ -35,15 +35,17 @@
       	<p>Select a location to view trends for.</p>
       	<ul>
         {{ $lastWeek := .LastWeek}}
+        {{ $lastMonth := .LastMonth}}
       	{{range $location := .Locations}}
       		<li>{{$location.Name}}</li>
           	<ul>
-            	<li><a href="web/trends/{{$location.Name}}">All words in last 24 hours</a></li>
-            	<li><a href="web/trends/{{$location.Name}}?limit=10">Top 10 words in last 24 hours</a></li>
-              <li><a href="web/trends/{{$location.Name}}?&interval=24">All words in last 24 hours by hour</a></li>
-              <li><a href="web/trends/{{$location.Name}}?from={{$lastWeek}}&interval=7">All words in last week by day</a></li>
-              <li><a href="web/trends/{{$location.Name}}?from=201601010000&to=201601312359&interval=31">All words posted in January 2016</a></li>
-            	<li><a href="web/trends/{{$location.Name}}?from=200801010000&to=201612312359&interval=9">All words posted from 1st January 2008 by year</a></li>
+            	<li>Last 24 hours: <a href="web/trends/{{$location.Name}}?limit=1000">All</a> | <a href="web/trends/{{$location.Name}}?limit=10">Top 10</a></li>
+              <li>Last 24 hours by hour: <a href="web/trends/{{$location.Name}}?interval=24&limit=1000">All</a> | <a href="web/trends/{{$location.Name}}?interval=24">Top 10</a></li>
+
+              <li>Last week by day: <a href="web/trends/{{$location.Name}}?from={{$lastWeek}}&interval=7&limit=1000">All</a> | <a href="web/trends/{{$location.Name}}?from={{$lastWeek}}&interval=7">Top 10</a></li>
+
+              <li>Last 4 weeks by week: <a href="web/trends/{{$location.Name}}?from={{$lastMonth}}&interval=4&limit=1000">All</a> | <a href="web/trends/{{$location.Name}}?from={{$lastMonth}}&interval=4">Top 10</a></li>
+            	<li>1st January 2008 until 31st December 2016 by year: <a href="web/trends/{{$location.Name}}?from=200801010000&to=201612312359&interval=9&limit=1000">All</a> | <a href="web/trends/{{$location.Name}}?from=200801010000&to=201612312359&interval=9">Top 10</a></li>
           	</ul>
       	{{end}}
       	</ul>
