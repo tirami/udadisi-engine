@@ -253,18 +253,11 @@ func DatabasePostsCount(location string) (count int, err error) {
 
     if location != "all" {
         locationhash := LocationHash(location)
-        rows, errDb := db.Query("SELECT count(*) FROM posts where locationhash=$1", locationhash)
+        errDb := db.QueryRow("SELECT count(uid) as count FROM posts where locationhash=$1", locationhash).Scan(&count)
         checkErr(errDb)
-        rows.Next()
-        err = rows.Scan(&count)
-        checkErr(err)
     } else {
-        rows, errDb := db.Query("SELECT count(*) FROM posts")
-        checkErr(errDb)
-        rows.Next()
-        err = rows.Scan(&count)
-        checkErr(err)
-    }
+        errDb := db.QueryRow("SELECT count(uid) as count FROM posts").Scan(&count)
+        checkErr(errDb)    }
     return
 }
 
@@ -281,17 +274,11 @@ func DatabaseLastMined(location string) (mined time.Time, err error) {
 
     if location != "all" {
         locationhash := LocationHash(location)
-        rows, errDb := db.Query("SELECT mined FROM posts where locationhash=$1 ORDER BY mined DESC LIMIT 1", locationhash)
+        errDb := db.QueryRow("SELECT mined FROM posts where locationhash=$1 ORDER BY mined DESC LIMIT 1", locationhash).Scan(&mined)
         checkErr(errDb)
-        rows.Next()
-        err = rows.Scan(&mined)
-        checkErr(err)
     } else {
-        rows, errDb := db.Query("SELECT mined FROM posts ORDER BY mined DESC LIMIT 1")
+        errDb := db.QueryRow("SELECT mined FROM posts ORDER BY mined DESC LIMIT 1").Scan(&mined)
         checkErr(errDb)
-        rows.Next()
-        err = rows.Scan(&mined)
-        checkErr(err)
     }
     return
 }

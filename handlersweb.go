@@ -35,7 +35,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
   content := make(map[string]interface{})
   content["Title"] = "Welcome to the Udadisi Engine"
   if err != nil {
-    content["Error"] = "Miners database table not yet created"
+    content["Error"] = err
   } else {
     content["Locations"] = locations
     t := time.Now()
