@@ -79,6 +79,12 @@ var routes = Routes{
         WebTrendsIndex,
     },
     Route{
+        "WebStats",
+        "GET",
+        "web/stats",
+        WebStats,
+    },
+    Route{
         "AdminLogin",
         "GET",
         "/admin/login",
