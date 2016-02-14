@@ -49,7 +49,26 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 // Diagonistic web pages
 func WebStats(w http.ResponseWriter, r *http.Request) {
+  locations, err := BuildLocationsList()
 
+  postsCount := map[string]int {}
+  lastPosted := map[string]time.Time {}
+  for _, location := range locations {
+    postsCount[location.Name], err = DatabasePostsCount(location.Name)
+    lastPosted[location.Name], err = DatabaseLastMined(location.Name)
+  }
+
+  content := make(map[string]interface{})
+  content["Title"] = "System Stats"
+  if err != nil {
+    content["Error"] = "Miners database table not yet created"
+  } else {
+    content["Locations"] = locations
+    content["PostsCount"] = postsCount
+    content["LastPosted"] = lastPosted
+  }
+
+  renderTemplate(w, "stats", content)
 }
 
 func WebTrendsRouteIndex(w http.ResponseWriter, r *http.Request) {

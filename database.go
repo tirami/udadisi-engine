@@ -240,6 +240,62 @@ func InsertPost(source string, location string, sourceURI string, postedAt time.
     return lastInsertId
 }
 
+func DatabasePostsCount(location string) (count int, err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
+    if location != "all" {
+        locationhash := LocationHash(location)
+        rows, errDb := db.Query("SELECT count(*) FROM posts where locationhash=$1", locationhash)
+        checkErr(errDb)
+        rows.Next()
+        err = rows.Scan(&count)
+        checkErr(err)
+    } else {
+        rows, errDb := db.Query("SELECT count(*) FROM posts")
+        checkErr(errDb)
+        rows.Next()
+        err = rows.Scan(&count)
+        checkErr(err)
+    }
+    return
+}
+
+func DatabaseLastMined(location string) (mined time.Time, err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
+    if location != "all" {
+        locationhash := LocationHash(location)
+        rows, errDb := db.Query("SELECT mined FROM posts where locationhash=$1 ORDER BY mined DESC LIMIT 1", locationhash)
+        checkErr(errDb)
+        rows.Next()
+        err = rows.Scan(&mined)
+        checkErr(err)
+    } else {
+        rows, errDb := db.Query("SELECT mined FROM posts ORDER BY mined DESC LIMIT 1")
+        checkErr(errDb)
+        rows.Next()
+        err = rows.Scan(&mined)
+        checkErr(err)
+    }
+    return
+}
+
 func QueryMiners() (rows *sql.Rows, err error) {
 
     defer func() {

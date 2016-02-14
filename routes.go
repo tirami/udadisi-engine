@@ -81,7 +81,7 @@ var routes = Routes{
     Route{
         "WebStats",
         "GET",
-        "web/stats",
+        "/web/stats",
         WebStats,
     },
     Route{
