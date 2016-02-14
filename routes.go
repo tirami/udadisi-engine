@@ -61,6 +61,12 @@ var routes = Routes{
         TrendsIndex,
     },
     Route{
+        "TrendSourcesCSV",
+        "GET",
+        "/v1/locations/{location}/trends/{term}/csv",
+        TrendSourcesCSV,
+    },
+    Route{
         "TrendsRootIndex",
         "GET",
         "/v1/locations/{location}/trends",

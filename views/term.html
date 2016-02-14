@@ -29,11 +29,15 @@
       <h1>{{.TermPackage.Term}}</h1>
       <h2>{{.FromParam}} - {{.ToParam}} interval of {{.Interval}}</h2>
 
+
       {{$location := .Location}}
       {{$fromParam := .FromParam}}
       {{$toParam := .ToParam}}
       {{$interval := .Interval}}
       {{$term := .TermPackage.Term}}
+
+      <a href="/v1/locations/{{$location}}/trends/{{$term}}/csv?from={{$fromParam}}&interval={{$interval}}">Export as CSV</a>
+
 
       <h3>Velocity</h3>
       {{.TermPackage.Velocity}}

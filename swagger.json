@@ -322,6 +322,78 @@
                     }
                 }
             }
+        },
+        "/locations/{location}/trends/{term}/csv": {
+            "get": {
+                "description": "Returns a CSV file of the sources for the trend.\nOptional query param of **velocity** determines\nminimum velocity of trends returned\n",
+                "parameters": [
+                    {
+                        "name": "term",
+                        "in": "path",
+                        "description": "term to be included in the results",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "location",
+                        "in": "path",
+                        "description": "name of location that the results should be from",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "velocity",
+                        "in": "query",
+                        "description": "minimum velocity of trends",
+                        "required": false,
+                        "type": "number",
+                        "format": "float"
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "source type that the stats should be from",
+                        "required": false,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "start date and time posts are from in format YYYYMMDDhhmm, defaults to -24hrs before now",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "end date and time posts are from, defaults to now",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "interval",
+                        "in": "query",
+                        "description": "number of periods to divide time range by, defaults to 2",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "text/csv"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "type": "file"
+
+                        }
+                    }
+                }
+            }
         }
     }
 }
