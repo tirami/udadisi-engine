@@ -2,138 +2,8 @@ package main
 
 import (
   "fmt"
-  "net/http"
   "time"
-  "encoding/json"
-  "strconv"
-  "github.com/gorilla/mux"
 )
-
-// Generates JSON list of locations
-func RenderLocationsJSON(w http.ResponseWriter, r *http.Request) {
-  w.Header().Add("Access-Control-Allow-Origin", "*")
-  w.Header().Add("Access-Control-Allow-Methods", "GET")
-  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
-  locations, _ := BuildLocationsList()
-  json.NewEncoder(w).Encode(locations)
-}
-
-// Generates JSON stats for a location
-func RenderLocationStatsJSON(w http.ResponseWriter, r *http.Request) {
-  vars := mux.Vars(r)
-  fmt.Println(vars)
-  location := vars["location"]
-  source := r.URL.Query().Get("source")
-  intervalParam := r.URL.Query().Get("interval")
-  interval, _ := strconv.ParseInt(intervalParam, 10, 0)
-  fromParam := r.URL.Query().Get("from")
-  toParam := r.URL.Query().Get("to")
-  t := time.Now()
-  if fromParam == "" {
-    from := t.Add(-24 * time.Hour)
-    fromParam = from.Format("200601021504")
-  }
-  if toParam == "" {
-    toParam = t.Format("200601021504")
-  }
-  if interval < 1 {
-    interval = 2
-  }
-  wordCounts, _ := WordCountRootCollection(location, source, fromParam, toParam, int(interval), 0)
-
-  totalCounts := map[string]int {}
-
-  for _, wordcount := range wordCounts {
-    count := totalCounts[wordcount.Term]
-    count = count + wordcount.Occurrences
-    totalCounts[wordcount.Term] = count
-  }
-
-  stats := map[string]string {}
-  stats["trendscount"] = strconv.Itoa(len(totalCounts))
-
-  w.Header().Add("Access-Control-Allow-Origin", "*")
-  w.Header().Add("Access-Control-Allow-Methods", "GET")
-  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
-  json.NewEncoder(w).Encode(stats)
-}
-
-// Generates JSON for root list of trends
-func TrendsRootIndex(w http.ResponseWriter, r *http.Request) {
-  vars := mux.Vars(r)
-  location := vars["location"]
-  source := r.URL.Query().Get("source")
-  limitParam := r.URL.Query().Get("limit")
-  limit, _ := strconv.ParseInt(limitParam, 10, 0)
-  if limit < 1 {
-    limit = 10
-  }
-  intervalParam := r.URL.Query().Get("interval")
-  interval, _ := strconv.ParseInt(intervalParam, 10, 0)
-  fromParam := r.URL.Query().Get("from")
-  toParam := r.URL.Query().Get("to")
-  t := time.Now()
-  if fromParam == "" {
-    from := t.Add(-24 * time.Hour)
-    fromParam = from.Format("200601021504")
-  }
-  if toParam == "" {
-    toParam = t.Format("200601021504")
-  }
-  if interval < 1 {
-    interval = 2
-  }
-  sortedCounts, _ := WordCountRootCollection(location, source, fromParam, toParam, int(interval), int(limit))
-
-  w.Header().Add("Access-Control-Allow-Origin", "*")
-  w.Header().Add("Access-Control-Allow-Methods", "GET")
-  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
-  json.NewEncoder(w).Encode(sortedCounts)
-}
-
-// Generates JSON list of trends for a term
-func TrendsIndex(w http.ResponseWriter, r *http.Request) {
-  vars := mux.Vars(r)
-  location := vars["location"]
-  source := r.URL.Query().Get("source")
-  term := vars["term"]
-
-  //termTrends := TermTrends {}
-  fromParam := r.URL.Query().Get("from")
-  toParam := r.URL.Query().Get("to")
-  velocityParam := r.URL.Query().Get("velocity")
-  minimumVelocity, _ := strconv.ParseFloat(velocityParam, 64)
-  intervalParam := r.URL.Query().Get("interval")
-  intervalConv, _ := strconv.ParseInt(intervalParam, 10, 0)
-  interval := int(intervalConv)
-  velocityInterval := float64(interval)
-    if velocityInterval == 0.0 {
-      velocityInterval = 1.0
-    }
-
-  if(minimumVelocity < 0.0) {
-    minimumVelocity = 0.0
-  }
-
-  t := time.Now()
-  if fromParam == "" {
-    from := t.Add(-24 * time.Hour)
-    fromParam = from.Format("200601021504")
-  }
-  if toParam == "" {
-    toParam = t.Format("200601021504")
-  }
-  if interval < 1 {
-    interval = 2
-  }
-
-  termPackage := TrendsCollection(source,location, term, fromParam, toParam, interval, velocityInterval, minimumVelocity)
-
-  w.Header().Add("Access-Control-Allow-Origin", "*")
-  w.Header().Add("Access-Control-Allow-Methods", "GET")
-  w.Header().Add("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization")
-  json.NewEncoder(w).Encode(termPackage)
-}
 
 func BuildLocationsList() (locations Locations, err error) {
   miners, err := MinersCollection()
@@ -159,7 +29,6 @@ func BuildLocationsList() (locations Locations, err error) {
 
   return
 }
-
 
 
 func WordCountRootCollection(location string, source string, fromParam string, toParam string, interval int, limit int) (sortedCounts WordCounts,  collectionErr error) {
@@ -201,7 +70,6 @@ func WordCountRootCollection(location string, source string, fromParam string, t
   }
 
   duration := toTime.Sub(fromTime)
-  //fmt.Println("duration ", duration.Minutes())
   duration  = duration / time.Duration(interval)
 
   for i := 0; i < interval; i++ {
@@ -255,13 +123,11 @@ func WordCountRootCollection(location string, source string, fromParam string, t
 
   velocityCounts := map[string]WordCount {}
 
-
   // For ordering by velocity
   for key, _ := range totalCounts {
     if totalCounts[key] > 1 {
 
       // Calculate the velocity
-      //seriesAverage := float64(totalCounts[key]) / float64(interval - 1)
       velocity := 0.0
       if serieses[key][interval - 2] == 0 {
         velocity = float64(serieses[key][interval - 1])
@@ -378,7 +244,6 @@ func TrendsCollection(source string, location string, term string, fromParam str
   }
 
   duration := toTime.Sub(fromTime)
-  //fmt.Println("duration ", duration.Minutes())
   duration  = duration / time.Duration(interval)
 
   termPackage := TermPackage {
@@ -410,7 +275,6 @@ func TrendsCollection(source string, location string, term string, fromParam str
         var locationHash int
         var source string
         err := rows.Scan(&uid, &postid, &term, &wordcount, &posted, &location, &locationHash, &source)
-        //fmt.Println(uid, postid, term, wordcount, posted, location)
         checkErr(err)
         termPackage.Series[i] = termPackage.Series[i] + wordcount
         totalOccurrences = totalOccurrences + wordcount
@@ -486,8 +350,6 @@ func TrendsCollection(source string, location string, term string, fromParam str
 
   // Calculate the velocity
   seriesAverage := float64(totalOccurrences) / float64(interval)
-  //fmt.Println("Total:", totalOccurrences, "interval:", interval)
-  //fmt.Println("Average:", seriesAverage)
   if seriesAverage != 0 {
     termPackage.Velocity = float64(termPackage.Series[interval - 1]) / seriesAverage
   }
