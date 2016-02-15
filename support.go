@@ -259,6 +259,8 @@ func TrendsCollection(source string, location string, term string, fromParam str
 
   sourceSerieses := map[string][]int {}
 
+  sourceURIsAdded := map[string]bool {}
+
   for i := 0; i < interval; i++ {
     toTime = fromTime.Add(duration)
     toParam = toTime.Format("200601021504")
@@ -296,14 +298,19 @@ func TrendsCollection(source string, location string, term string, fromParam str
           var postLocationHash int
           err = postRows.Scan(&thisPostuid, &mined, &postPosted, &sourceURI, &postLocation, &postSource, &postLocationHash)
           checkErr(err)
-          source := Source {
-            Source: postSource,
-            Location: postLocation,
-            SourceURI: sourceURI,
-            Posted: postPosted,
-            Mined: mined,
+          if _, ok := sourceURIsAdded[sourceURI]; ok {
+          } else {
+            sourceURIsAdded[sourceURI] = true
+            source := Source {
+              Source: postSource,
+              Location: postLocation,
+              SourceURI: sourceURI,
+              Posted: postPosted,
+              Mined: mined,
+            }
+            termPackage.Sources = append(termPackage.Sources, source)
           }
-          termPackage.Sources = append(termPackage.Sources, source)
+
           termsRows := QueryTermsForPost(thisPostuid)
             for termsRows.Next() {
               var wcuid int

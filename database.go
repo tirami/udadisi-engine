@@ -235,6 +235,8 @@ func InsertPost(source string, location string, sourceURI string, postedAt time.
     if duplicate == false {
        err := db.QueryRow("INSERT INTO posts (source, location, mined, posted, sourceURI, locationhash) VALUES($1,$2,$3,$4,$5,$6) returning uid;", source, location, minedAt.Format(time.RFC3339), postedAt.Format(time.RFC3339), sourceURI,LocationHash(location)).Scan(&lastInsertId)
         checkErr(err)
+    } else {
+        fmt.Println("We already have", sourceURI, "for", location)
     }
 
     return lastInsertId
