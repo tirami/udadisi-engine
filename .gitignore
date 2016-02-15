@@ -4,3 +4,4 @@ app.zip
 *.exe
 udadisi-engine
 tmp
+.ebextensions/db.config
