@@ -121,7 +121,13 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
   err := decoder.Decode(&posts)
   if err != nil {
     fmt.Println("Error:", err)
+    http.Error(w, err.Error(), 500)
+    return
   }
+
+  http.Error(w, "OK", 200)
+
+
 
   //fmt.Println("Post from Miner Id: ", posts.MinerId)
   //fmt.Println(posts)
