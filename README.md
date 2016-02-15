@@ -34,7 +34,7 @@ or if you already have an older version installed
 
 ### Posting from Miner to Engine
 
-* POST JSON to localhost:8080/v1/minerpost
+POST JSON to localhost:8080/v1/minerpost
 
     {
         "posts": [{
@@ -46,8 +46,14 @@ or if you already have an older version installed
             "datetime": 201508211014,
             "mined_at": 201508211530
         }],
-        "miner_id": 1
+        "miner_id": "1"
     }
+    
+    
+Sample using curl
+
+    curl -H "Content-Type: application/json" -X POST -d '{ "posts": [{ "terms": { "foo": 2, "bar": 1 }, "url": "http://www.twitter.com/post/123456", "datetime": 201508211014, "mined_at": 201508211530 }], "miner_id": "1" }' http://localhost:8080/v1/minerpost
+
 
 ### Sample Data Viewer
 
