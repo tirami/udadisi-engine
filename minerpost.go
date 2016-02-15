@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "strings"
     "time"
 )
@@ -23,12 +22,10 @@ type myTime struct {
 }
 
 func (t *myTime) UnmarshalJSON(buf []byte) error {
-  fmt.Println(string(buf))
-
-    tt, err := time.Parse("200601021504", strings.Trim(string(buf), `"`))
-    if err != nil {
-        return err
-    }
-    t.Time = tt
-    return nil
+  tt, err := time.Parse("200601021504", strings.Trim(string(buf), `"`))
+  if err != nil {
+    return err
+  }
+  t.Time = tt
+  return nil
 }
