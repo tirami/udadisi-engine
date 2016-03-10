@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "time"
+  "strings"
 )
 
 func BuildLocationsList() (locations Locations, err error) {
@@ -97,7 +98,11 @@ func WordCountRootCollection(location string, source string, fromParam string, t
         Series: []int{wordcount},
         Sequence: i,
       }
-      wordCounts = append(wordCounts, wordCount)
+
+      if !strings.ContainsAny(term, "<>[]/:;()=\"") && !strings.Contains(term, "http") {
+        wordCounts = append(wordCounts, wordCount)
+      }
+
     }
 
     fromTime = fromTime.Add(duration)
