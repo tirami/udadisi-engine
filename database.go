@@ -213,7 +213,7 @@ func InsertMiner(name string, location string, latitude string, longitude string
 
     fmt.Println(LocationHash(location))
 
-    err = db.QueryRow("INSERT INTO miners (name, location, geocoord, source, url, locationhash) VALUES($1,$2,POINT($3,$4),$5,$6,$7) returning uid;", name, location, latitude, longitude, source, url, LocationHash(location)).Scan(&lastInsertId)
+    err = db.QueryRow("INSERT INTO miners (name, location, geocoord, source, url, locationhash, stopwords) VALUES($1,$2,POINT($3,$4),$5,$6,$7,$8) returning uid;", name, location, latitude, longitude, source, url, LocationHash(location), stopwords).Scan(&lastInsertId)
     checkErr(err)
 
     return
