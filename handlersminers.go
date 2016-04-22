@@ -81,7 +81,8 @@ func AdminCreateMiner(w http.ResponseWriter, r *http.Request) {
     latitude := r.PostFormValue("latitude")
     longitude := r.PostFormValue("longitude")
     source := r.PostFormValue("source")
-    lastInsertId, err := InsertMiner(name, location, latitude, longitude, source, url)
+    stopwords := r.PostFormValue("stopwords")
+    lastInsertId, err := InsertMiner(name, location, latitude, longitude, source, url, stopwords)
     if err != nil {
       content["MinerError"] = err
     }

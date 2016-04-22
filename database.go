@@ -193,7 +193,7 @@ func DropTable(sql string) (err error) {
     return
 }
 
-func InsertMiner(name string, location string, latitude string, longitude string, source string, url string) (lastInsertId int, err error) {
+func InsertMiner(name string, location string, latitude string, longitude string, source string, url string, stopwords string) (lastInsertId int, err error) {
     defer func() {
         if r := recover(); r != nil {
             var ok bool
