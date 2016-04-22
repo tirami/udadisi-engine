@@ -7,6 +7,7 @@ type Miner struct {
   GeoCoord Point `json:"geo_coord"`
   Source string `json:"source"`
   Url string `json:"url"`
+  Stopwords string `json:"stopwords"`
 }
 
 type Miners []Miner

@@ -153,6 +153,7 @@ func MinerPost(w http.ResponseWriter, r *http.Request) {
       Location: location,
       GeoCoord: geoCoord,
       Url: url,
+      Stopwords: stopwords,
     }
   }
 

@@ -215,6 +215,7 @@ func MinersCollection() (miners Miners, err error) {
         Location: location,
         GeoCoord: geoCoord,
         Url: url,
+        Stopwords: stopwords,
       }
       miners = append(miners, miner)
     }
