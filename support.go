@@ -205,7 +205,8 @@ func MinersCollection() (miners Miners, err error) {
       var url string
       var geoCoord Point
       var locationHash int
-      err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord, &locationHash)
+      var stopwords string
+      err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord, &locationHash, &stopwords)
       checkErr(err)
       miner := Miner {
         Uid: uid,
