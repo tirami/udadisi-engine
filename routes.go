@@ -127,6 +127,12 @@ var routes = Routes{
         AdminCreateIndexes,
     },
     Route{
+        "AdminAddStopwords",
+        "GET",
+        "/admin/addstopwords",
+        AdminAddStopwords,
+    },
+    Route{
         "AdminClearData",
         "GET",
         "/admin/cleardata",

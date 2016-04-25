@@ -71,7 +71,31 @@ func BuildDatabase() {
     CreateTable(CREATE[Terms])
     CreateTable(CREATE[MinersTable])
     CreateIndexes()
+    AddStopwords()
 }
+
+func AddStopwords() (err error){
+    sql := "ALTER TABLE miners ADD stopwords varchar(255);"
+    
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
+    fmt.Println("# Adding stopwords " + sql)
+
+    if _, err := db.Exec(sql); err != nil {
+        checkErr(err)
+    }
+
+    return
+}
+
 
 func CreateIndexes() {
     CreateIndex("CREATE INDEX ON posts (uid);")

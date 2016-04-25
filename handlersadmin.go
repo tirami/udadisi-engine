@@ -64,6 +64,26 @@ func AdminCreateIndexes(w http.ResponseWriter, r *http.Request) {
   }
 }
 
+func AdminAddStopwords(w http.ResponseWriter, r *http.Request) {
+  sess, err := globalSessions.SessionStart(w, r)
+  if err != nil {
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
+  }
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
+  } else {
+    AddStopwords()
+
+    fmt.Fprintf(w, "<a href=\"/\">Home</a>")
+    fmt.Fprintf(w, "<p>Stopwords support added</p>")
+    fmt.Fprintf(w, "<a href=\"/admin/\">Admin Home</a>")
+  }
+}
+
 func AdminClearData(w http.ResponseWriter, r *http.Request) {
   sess, err := globalSessions.SessionStart(w, r)
   if err != nil {
