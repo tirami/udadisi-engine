@@ -310,23 +310,26 @@ func QueryMinerForId(minerId int) *sql.Rows {
 }
 
 func QueryStopwordsFor(location string, source string) (rows *sql.Rows, err error) {
+    
+    locationCondition := ""
     if (location == "all") || (location == "") { 
-        locationCondition :=  "locationhash > 0"
+        locationCondition =  "locationhash > 0"
     } else {
-        locationhash := LocationHash(location)
-        locationCondition :=  "locationhash = " + locationhash
+        lh := LocationHash(location)
+        locationhash := fmt.Sprint(lh)
+        locationCondition =  "locationhash = " + locationhash
     }
+
+    sourceCondition := "source = '" + source + "'"
     if (source == "all") || (source == "") { 
-        sourceCondition := "source LIKE '%'"
-    } else {
-        sourceCondition := "source = '" + source + "'"
+        sourceCondition = "source LIKE '%'"
     }
 
     statement := "SELECT stopwords FROM miners WHERE " + locationCondition + " AND " + sourceCondition + ";"
-    rows, err := db.Query(statement)
+    rows, err = db.Query(statement)
     
     checkErr(err);
-    return rows
+    return
 }
 
 func QueryTerms(source string, location string, term string, fromDate string, toDate string) (rows *sql.Rows, err error) {

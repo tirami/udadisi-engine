@@ -31,6 +31,33 @@ func BuildLocationsList() (locations Locations, err error) {
   return
 }
 
+func stringInSlice(str string, list []string) bool {
+  for _, v := range list {
+    if v == str {
+      return true
+    }
+  }
+  return false
+}
+
+
+func CollectStopwords(location string, source string) (stopwords []string) {
+  stoprows, err := QueryStopwordsFor(location, source)
+  checkErr(err)
+  stopwords = []string{"http"}
+
+  for stoprows.Next() {
+    var stopstr string
+    err := stoprows.Scan(&stopstr)
+    checkErr(err)
+    stopstr   = strings.ToLower(stopstr)
+    stopstr   = strings.Replace(stopstr, " ", "", -1)
+    stopwords = append(stopwords, strings.Split(stopstr, ",")...)
+  }
+
+  return stopwords
+}
+
 
 func WordCountRootCollection(location string, source string, fromParam string, toParam string, interval int, limit int) (sortedCounts WordCounts,  collectionErr error) {
 
@@ -73,6 +100,9 @@ func WordCountRootCollection(location string, source string, fromParam string, t
   duration := toTime.Sub(fromTime)
   duration  = duration / time.Duration(interval)
 
+  stopwords := CollectStopwords(location, source)
+  fmt.Printf("%q\n", stopwords)
+
   for i := 0; i < interval; i++ {
 
     toTime = fromTime.Add(duration)
@@ -99,7 +129,7 @@ func WordCountRootCollection(location string, source string, fromParam string, t
         Sequence: i,
       }
 
-      if !strings.ContainsAny(term, "<>[]/:;()=\"") && !strings.Contains(term, "http") {
+      if !strings.ContainsAny(term, "<>[]/:;()=\"") && !stringInSlice(term, stopwords) {
         wordCounts = append(wordCounts, wordCount)
       }
 
