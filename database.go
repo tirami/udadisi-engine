@@ -309,7 +309,7 @@ func QueryMinerForId(minerId int) *sql.Rows {
     return rows
 }
 
-func QueryStopwordsFor(location string, source string) *sql.Rows {
+func QueryStopwordsFor(location string, source string) (rows *sql.Rows, err error) {
     if (location == "all") || (location == "") { 
         locationCondition :=  "locationhash > 0"
     } else {
