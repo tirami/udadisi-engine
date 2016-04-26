@@ -6,6 +6,7 @@ import (
   "encoding/json"
   "bytes"
   "strconv"
+  "github.com/gorilla/mux"
 )
 
 func GetMiner(id int) (miner Miner, err error) {
@@ -96,9 +97,10 @@ func AdminEditMiner(w http.ResponseWriter, r *http.Request) {
     content := make(map[string]interface{})
     content["Title"] = "Miners Admin: Add New Miner"
 
-    uidParam := r.URL.Query().Get("uid")
-    uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
-    miner, err := GetMiner(int(uidConv))
+    vars := mux.Vars(r)
+    uidConv := vars["uid"]
+    uid, _ := strconv.ParseInt(uidConv, 10, 0)
+    miner, err := GetMiner(int(uid))
 
     if err != nil {
       content["Error"] = "Could not retrieve miner"
@@ -126,9 +128,10 @@ func AdminUpdateMiner(w http.ResponseWriter, r *http.Request) {
     content := make(map[string]interface{})
     content["Title"] = "Miners Admin"
 
-    uidParam := r.URL.Query().Get("uid")
-    uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
-    miner, err := GetMiner(int(uidConv))
+    vars := mux.Vars(r)
+    uidConv := vars["uid"]
+    uid, _ := strconv.ParseInt(uidConv, 10, 0)
+    miner, err := GetMiner(int(uid))
 
     if err != nil {
       content["Error"] = "Could not retrieve miner"
@@ -156,9 +159,11 @@ func AdminDeleteMiner(w http.ResponseWriter, r *http.Request) {
     content["Title"] = "Miners Admin"
 
     //Delete miner
-    uidParam := r.URL.Query().Get("uid")
-    uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
-    _, derr := DeleteMiner(int(uidConv))
+    vars := mux.Vars(r)
+    uidConv := vars["uid"]
+    uid, _ := strconv.ParseInt(uidConv, 10, 0)
+    _, derr := DeleteMiner(int(uid))
+
     if (derr != nil) { 
       content["Error"] = "Could not delete miner" 
     }
