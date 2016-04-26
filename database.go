@@ -75,7 +75,7 @@ func BuildDatabase() {
 }
 
 func AddStopwords() (err error){
-    sql := "ALTER TABLE miners ADD stopwords varchar(255);"
+    sql := "ALTER TABLE miners ADD stopwords varchar(255) DEFAULT '';"
     
     defer func() {
         if r := recover(); r != nil {
