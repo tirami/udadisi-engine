@@ -433,6 +433,19 @@ func QueryAll() {
     }
 }
 
+func DeleteMiner(uid int) (affect *sql.Rows, err error) {
+    stmt, err := db.Prepare("DELETE FROM miners where uid=$1", uid)
+    checkErr(err)
+
+    res, err := stmt.Exec(uid)
+    checkErr(err)
+
+    affect, err := res.RowsAffected()
+    checkErr(err)
+
+    return
+}
+
 func DeletePost(db *sqlx.DB, uid int) {
     stmt, err := db.Prepare("delete from posts where uid=$1")
     checkErr(err)
