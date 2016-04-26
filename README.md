@@ -4,6 +4,8 @@
 
 Udadisi was developed by [Tirami](http://www.tirami.co.uk/), a software development company, in collaboration with [Practical Action](http://practicalaction.org/) and the [University of Edinburgh Global Development Academy](http://www.ed.ac.uk/schools-departments/global-development), as part of the Technology and the Future of Work project, funded by the [Rockefeller Foundation](https://www.rockefellerfoundation.org/).
 
+For more information refer to the wiki: https://github.com/tirami/udadisi-engine/wiki
+
 ### Other Components
 
 The other components that build up the suite can be found at:
@@ -11,8 +13,6 @@ The other components that build up the suite can be found at:
 * https://github.com/tirami/udadisi-frontend
 * https://github.com/tirami/udadisi-twitter
 * https://github.com/tirami/udadisi-rss
-* https://github.com/tirami/udadisi-web
-* https://github.com/tirami/udadisi-google-scholar
 
 ### Requirements
 
