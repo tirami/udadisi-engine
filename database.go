@@ -243,6 +243,35 @@ func InsertMiner(name string, location string, latitude string, longitude string
     return
 }
 
+func UpdateMiner(name string, location string, latitude string, longitude string, source string, url string, stopwords string, uid int) (affected int64, err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            var ok bool
+            err, ok = r.(error)
+            if !ok {
+                err = fmt.Errorf("Database: %v", r)
+            }
+        }
+    }()
+
+    if latitude == "" { latitude = "0" }
+    if longitude == "" { longitude = "0" }
+
+    stmt, err := db.Prepare("UPDATE miners SET name=$1, location=$2, geocoord=POINT($3,$4), source=$5, url=$6, locationhash=$7, stopwords=$8 WHERE uid = $9;")
+    checkErr(err)
+    
+    res, err := stmt.Exec(name, location, latitude, longitude, source, url, LocationHash(location), stopwords, uid)
+    checkErr(err)
+    
+    affected, err = res.RowsAffected()
+    checkErr(err)
+
+    //err := db.QueryRow("UPDATE miners SET name=$1, location=$2, geocoord=POINT($3,$4), source=$5, url=$6, locationhash=$7, stopwords=$8 WHERE uid = $9;", name, location, latitude, longitude, source, url, LocationHash(location), stopwords, uid).Scan(&lastUpdateId)
+    //checkErr(err)
+
+    return
+}
+
 func InsertTerm(location string, term string, wordcount int, postid int, posted time.Time) {
     var lastInsertId int
     err := db.QueryRow("INSERT INTO terms (postid, term, wordcount, posted, location, locationhash) VALUES($1,$2,$3,$4,$5,$6) returning uid;", postid, strings.ToLower(term), wordcount, posted.Format(time.RFC3339), location,LocationHash(location)).Scan(&lastInsertId)

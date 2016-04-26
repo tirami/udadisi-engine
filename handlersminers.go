@@ -95,7 +95,7 @@ func AdminEditMiner(w http.ResponseWriter, r *http.Request) {
     AdminLogin(w, r)
   } else {
     content := make(map[string]interface{})
-    content["Title"] = "Miners Admin: Add New Miner"
+    content["Title"] = "Miners Admin: Edit Miner"
 
     vars := mux.Vars(r)
     uidConv := vars["uid"]
@@ -126,20 +126,47 @@ func AdminUpdateMiner(w http.ResponseWriter, r *http.Request) {
     AdminLogin(w, r)
   } else {
     content := make(map[string]interface{})
-    content["Title"] = "Miners Admin"
-
+    
     vars := mux.Vars(r)
     uidConv := vars["uid"]
     uid, _ := strconv.ParseInt(uidConv, 10, 0)
-    miner, err := GetMiner(int(uid))
 
+    err := r.ParseForm()
     if err != nil {
-      content["Error"] = "Could not retrieve miner"
-    } else {
-      content["Miner"] = miner
+      fmt.Println(err)
     }
 
-    fmt.Fprintf(w, "<p>UPDATE MINER AND REDIRECT</p>")
+    name := r.PostFormValue("name")
+    url := r.PostFormValue("url")
+    location := r.PostFormValue("location")
+    latitude := r.PostFormValue("latitude")
+    longitude := r.PostFormValue("longitude")
+    source := r.PostFormValue("source")
+    stopwords := r.PostFormValue("stopwords")
+
+    if (name == "") || (url == "") || (location == "") || (latitude == "") || (longitude == "") || (source == "") {
+      vars := mux.Vars(r)
+      uidConv := vars["uid"]
+      uid, _ := strconv.ParseInt(uidConv, 10, 0)
+      miner, _ := GetMiner(int(uid))
+      content["Miner"] = miner
+      content["Title"] = "Miners Admin: Edit Miner"
+      content["Error"] = "Can't update - one or more fields are blank"
+      renderTemplate(w, "admin/miners/edit", content)
+    } else {
+      content["Title"] = "Miners Admin"
+      _, err = UpdateMiner(name, location, latitude, longitude, source, url, stopwords, int(uid))
+      if err != nil {
+        content["MinerError"] = err
+      }
+      miners, err :=  MinersCollection()
+      if err != nil {
+        content["Error"] = "Miners database table not yet created"
+      } else {
+        content["Miners"] = miners
+      }
+      renderTemplate(w, "admin/miners/index", content)
+    }
   }
 }
 
