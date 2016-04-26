@@ -28,76 +28,17 @@
     </nav>
 
   	<div class="container-fluid">
-			<h1>{{.Title}}</h1>
-
-			{{ if .MinerError }}
-				<div class="alert alert-danger" role="alert">{{.MinerError}}</div>
-			{{ end }}
-
-			{{ if .Error }}
-				<div class="alert alert-danger" role="alert">{{.Error}}</div>
-			{{ else }}
-				<form action="/admin/miners" method="post" class="form-horizontal">
-					<div class="form-group">
-						<label for="name" class="col-sm-2 control-label">Name</label>
-						<div class="col-sm-4">
-							<input type="text" name="name" class="form-control" placeholder="Name">
-							<p class="help-block">A name used to identify the miner.</p>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="source" class="col-sm-2 control-label">Source</label>
-						<div class="col-sm-4">
-							<input type="text" name="source" class="form-control" placeholder="Source">
-							<p class="help-block">Type of miner e.g. twitter, blog, etc.</p>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="url" class="col-sm-2 control-label">URL</label>
-						<div class="col-sm-4">
-							<input type="text" name="url" class="form-control" placeholder="URL">
-							<p class="help-block">URL of the miner.</p>
-						</div>
-					</div>
-				  <div class="form-group">
-						<label for="stopwords" class="col-sm-2 control-label">Stop Words</label>
-						<div class="col-sm-4">
-							<input type="text" name="stopwords" class="form-control" placeholder="Stop Words">
-							<p class="help-block">List of term to remove from this miners posts.</p>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="location" class="col-sm-2 control-label">Location</label>
-						<div class="col-sm-4">
-							<input type="text" name="location" class="form-control" placeholder="Location">
-							<p class="help-block">City / region that the miner is collecting data for.</p>
-						</div>
-					</div>
-          <div class="form-group">
-            <label for="latitude" class="col-sm-2 control-label">Latitude</label>
-            <div class="col-sm-2">
-              <input type="text" name="latitude" class="form-control" placeholder="Latitude">
-            </div>
-            <label for="longitude" class="col-sm-1 control-label">Longitude</label>
-            <div class="col-sm-2">
-              <input type="text" name="longitude" class="form-control" placeholder="Longitude">
-            </div>
-          </div>
-					<div class="form-group">
-    				<div class="col-sm-offset-2 col-sm-4">
-							<button type="submit" class="btn btn-default">Create Miner</button>
-						</div>
-					</div>
-				</form>
+		<div class="row">
+			<div class="col-sm-10">
+				<h1>{{.Title}}</h1>
+			</div>
+			<div class="col-sm-2">
+				<a href="/admin/miners/new" class="btn btn-danger">Add Miner</a>
+			</div>
+		</div>
 
 				<div class="row">
-					<div class="col-sm-offset-2 col-sm-4">
-						<a href="/admin/miners/resetdatabase" class="btn btn-danger">Reset Miners</a>
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="col-sm-offset-1 col-sm-10">
+					<div class="col-sm-10">
 						<table class="table table-striped">
 							<tr>
 								<th>Name</th>
@@ -115,13 +56,25 @@
 								<th>{{$miner.Source}}</td>
 								<td>{{$miner.Url}}</td>
 								<td>{{$miner.Uid}}</td>
+								<td><a href="/admin/miners/{{$miner.Uid}}/edit">Edit</a></td>
 								<td><a href="{{$miner.Url}}/categories/{{$miner.Uid}}" target="_blank">Configure</a></td>
+								<td>
+									<form action="/admin/miners/{{$miner.Uid}}" method="DELETE">
+									    <div class="button">
+									        <button type="submit">Delete</button>
+									    </div>
+									</form>
+								</td>
 							</tr>
-						{{end}}
 					</table>
 				</div>
 			</div>
 			{{ end }}
+			<div class="row">
+				<div class="col-sm-4">
+					<a href="/admin/miners/resetdatabase" class="btn btn-danger">Reset Miners</a>
+				</div>
+			</div>
 		</div>
 	</body>
 </html>
