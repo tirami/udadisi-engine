@@ -124,7 +124,7 @@ func AdminUpdateMiner(w http.ResponseWriter, r *http.Request) {
     AdminLogin(w, r)
   } else {
     content := make(map[string]interface{})
-    content["Title"] = "Miners Admin: Update Miner"
+    content["Title"] = "Miners Admin"
 
     uidParam := r.URL.Query().Get("uid")
     uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
@@ -153,19 +153,25 @@ func AdminDeleteMiner(w http.ResponseWriter, r *http.Request) {
     AdminLogin(w, r)
   } else {
     content := make(map[string]interface{})
-    content["Title"] = "Miners Admin: Delete Miner"
-
+    content["Title"] = "Miners Admin"
+    
+    //Delete miner
     uidParam := r.URL.Query().Get("uid")
     uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
-    miner, err := GetMiner(int(uidConv))
-
-    if err != nil {
-      content["Error"] = "Could not retrieve miner"
-    } else {
-      content["Miner"] = miner
+    affected, derr := DeleteMiner(int(uidConv))
+    if (derr != nil) { 
+      content["Error"] = "Could not delete miner" 
     }
 
-    fmt.Fprintf(w, "<p>DELETE MINER AND REDIRECT</p>")
+    //Get remaining collection
+    miners, err :=  MinersCollection()
+    if err != nil {
+      content["Error"] = "Miners database table not yet created"
+    } else {
+      content["Miners"] = miners
+    }
+    
+    renderTemplate(w, "admin/miners/index", content)
   }
 }
 
