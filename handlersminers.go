@@ -77,8 +77,8 @@ func AdminNewMiner(w http.ResponseWriter, r *http.Request) {
   } else {
     content := make(map[string]interface{})
     content["Title"] = "Miners Admin: Add New Miner"
-    fmt.Fprintf(w, "<p>NEW MINER</p>")
-    //renderTemplate(w, "admin/miners/new", content)
+    // fmt.Fprintf(w, "<p>NEW MINER</p>")
+    renderTemplate(w, "admin/miners/new", content)
   }
 }
 
@@ -108,8 +108,8 @@ func AdminEditMiner(w http.ResponseWriter, r *http.Request) {
       content["Miner"] = miner
     }
 
-    fmt.Fprintf(w, "<p>EDIT MINER {{ .Miner.uid }} </p>")
-    //renderTemplate(w, "admin/miners/edit", content)
+    // fmt.Fprintf(w, "<p>EDIT MINER {{ .Miner.uid }} </p>")
+    renderTemplate(w, "admin/miners/edit", content)
   }
 }
 
