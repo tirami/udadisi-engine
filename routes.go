@@ -151,10 +151,40 @@ var routes = Routes{
         AdminMinersResetDatabase,
     },
     Route{
-        "AdminMiners",
+        "AdminNewMiner",
+        "GET",
+        "/admin/miners/new",
+        AdminNewMiner,
+    },
+    Route{
+        "AdminCreateMiner",
         "POST",
         "/admin/miners",
         AdminCreateMiner,
+    },
+    Route{
+        "AdminEditMiner",
+        "GET",
+        "/admin/miners/{uid}/edit",
+        AdminEditMiner,
+    },
+    Route{
+        "AdminUpdateMiner",
+        "PATCH",
+        "/admin/miners/{uid}",
+        AdminUpdateMiner,
+    },
+    Route{
+        "AdminUpdateMiner",
+        "PUT",
+        "/admin/miners/{uid}",
+        AdminUpdateMiner,
+    },
+    Route{
+        "AdminDeleteMiner",
+        "DELETE",
+        "/admin/miners/{uid}",
+        AdminDeleteMiner,
     },
     Route{
         "MinerPost",

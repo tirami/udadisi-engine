@@ -8,6 +8,33 @@ import (
   "strconv"
 )
 
+func GetMiner(id int) (miner Miner, err error) {
+  
+  rows := QueryMinerForId(id)
+  for rows.Next() {
+    var uid int
+    var name string
+    var source string
+    var location string
+    var url string
+    var geoCoord Point
+    var locationHash int
+    var stopwords string
+    err := rows.Scan(&uid, &name, &source, &location, &url, &geoCoord, &locationHash, &stopwords)
+    checkErr(err)
+    miner = Miner {
+      Uid: uid,
+      Name: name,
+      Source: source,
+      Location: location,
+      GeoCoord: geoCoord,
+      Url: url,
+      Stopwords: stopwords,
+    }
+  }
+  return
+}
+
 // Miners admin home page
 func AdminMiners(w http.ResponseWriter, r *http.Request) {
 
@@ -32,6 +59,113 @@ func AdminMiners(w http.ResponseWriter, r *http.Request) {
       content["Miners"] = miners
     }
     renderTemplate(w, "admin/miners/index", content)
+  }
+}
+
+func AdminNewMiner(w http.ResponseWriter, r *http.Request) {
+  sess, err := globalSessions.SessionStart(w, r)
+  if err != nil {
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
+  }
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
+  } else {
+    content := make(map[string]interface{})
+    content["Title"] = "Miners Admin: Add New Miner"
+    fmt.Fprintf(w, "<p>NEW MINER</p>")
+    //renderTemplate(w, "admin/miners/new", content)
+  }
+}
+
+func AdminEditMiner(w http.ResponseWriter, r *http.Request) {
+  sess, err := globalSessions.SessionStart(w, r)
+  if err != nil {
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
+  }
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
+  } else {
+    content := make(map[string]interface{})
+    content["Title"] = "Miners Admin: Add New Miner"
+
+    uidParam := r.URL.Query().Get("uid")
+    uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
+    miner, err := GetMiner(int(uidConv))
+
+    if err != nil {
+      content["Error"] = "Could not retrieve miner"
+    } else {
+      content["Miner"] = miner
+    }
+
+    fmt.Fprintf(w, "<p>EDIT MINER {{ .Miner.uid }} </p>")
+    //renderTemplate(w, "admin/miners/edit", content)
+  }
+}
+
+func AdminUpdateMiner(w http.ResponseWriter, r *http.Request) {
+  sess, err := globalSessions.SessionStart(w, r)
+  if err != nil {
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
+  }
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
+  } else {
+    content := make(map[string]interface{})
+    content["Title"] = "Miners Admin: Update Miner"
+
+    uidParam := r.URL.Query().Get("uid")
+    uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
+    miner, err := GetMiner(int(uidConv))
+
+    if err != nil {
+      content["Error"] = "Could not retrieve miner"
+    } else {
+      content["Miner"] = miner
+    }
+
+    fmt.Fprintf(w, "<p>UPDATE MINER AND REDIRECT</p>")
+  }
+}
+
+func AdminDeleteMiner(w http.ResponseWriter, r *http.Request) {
+  sess, err := globalSessions.SessionStart(w, r)
+  if err != nil {
+      //need logging here instead of print
+      fmt.Printf("Error, could not start session %v\n", err)
+      return
+  }
+  defer sess.SessionRelease(w)
+  username := sess.Get("username")
+  if username == nil {
+    AdminLogin(w, r)
+  } else {
+    content := make(map[string]interface{})
+    content["Title"] = "Miners Admin: Delete Miner"
+
+    uidParam := r.URL.Query().Get("uid")
+    uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
+    miner, err := GetMiner(int(uidConv))
+
+    if err != nil {
+      content["Error"] = "Could not retrieve miner"
+    } else {
+      content["Miner"] = miner
+    }
+
+    fmt.Fprintf(w, "<p>DELETE MINER AND REDIRECT</p>")
   }
 }
 
