@@ -433,14 +433,14 @@ func QueryAll() {
     }
 }
 
-func DeleteMiner(uid int) (affect *sql.Rows, err error) {
-    stmt, err := db.Prepare("DELETE FROM miners where uid=$1", uid)
+func DeleteMiner(uid int) (affect int64, err error) {
+    stmt, err := db.Prepare("DELETE FROM miners where uid=$1")
     checkErr(err)
 
     res, err := stmt.Exec(uid)
     checkErr(err)
 
-    affect, err := res.RowsAffected()
+    affect, err = res.RowsAffected()
     checkErr(err)
 
     return

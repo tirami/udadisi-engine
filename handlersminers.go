@@ -154,11 +154,11 @@ func AdminDeleteMiner(w http.ResponseWriter, r *http.Request) {
   } else {
     content := make(map[string]interface{})
     content["Title"] = "Miners Admin"
-    
+
     //Delete miner
     uidParam := r.URL.Query().Get("uid")
     uidConv, _ := strconv.ParseInt(uidParam, 10, 0)
-    affected, derr := DeleteMiner(int(uidConv))
+    _, derr := DeleteMiner(int(uidConv))
     if (derr != nil) { 
       content["Error"] = "Could not delete miner" 
     }
@@ -170,7 +170,7 @@ func AdminDeleteMiner(w http.ResponseWriter, r *http.Request) {
     } else {
       content["Miners"] = miners
     }
-    
+
     renderTemplate(w, "admin/miners/index", content)
   }
 }
