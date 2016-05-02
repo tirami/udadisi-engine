@@ -59,17 +59,18 @@
 								<td><a href="/admin/miners/{{$miner.Uid}}/edit">Edit</a></td>
 								<td><a href="{{$miner.Url}}/categories/{{$miner.Uid}}" target="_blank">Configure</a></td>
 								<td>
-									<form action="/admin/miners/{{$miner.Uid}}" method="DELETE">
+									<form action="/admin/miners/{{$miner.Uid}}" method="POST">
+                      <input type="hidden" name="_method" value="delete" />
 									    <div class="button">
 									        <button type="submit">Delete</button>
 									    </div>
 									</form>
 								</td>
 							</tr>
+            {{ end }}
 					</table>
 				</div>
 			</div>
-			{{ end }}
 			<div class="row">
 				<div class="col-sm-4">
 					<a href="/admin/miners/resetdatabase" class="btn btn-danger">Reset Miners</a>
