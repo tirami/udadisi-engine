@@ -185,14 +185,16 @@ func AdminDeleteMiner(w http.ResponseWriter, r *http.Request) {
     content := make(map[string]interface{})
     content["Title"] = "Miners Admin"
 
-    //Delete miner
-    vars := mux.Vars(r)
-    uidConv := vars["uid"]
-    uid, _ := strconv.ParseInt(uidConv, 10, 0)
-    _, derr := DeleteMiner(int(uid))
+    method := r.PostFormValue("_method")
+    if ((r.Method == "DELETE") || (r.Method == "POST") && (method == "DELETE")) {
+      vars := mux.Vars(r)
+      uidConv := vars["uid"]
+      uid, _ := strconv.ParseInt(uidConv, 10, 0)
+      _, derr := DeleteMiner(int(uid))
 
-    if (derr != nil) { 
-      content["Error"] = "Could not delete miner" 
+      if (derr != nil) {
+        content["Error"] = "Could not delete miner" 
+      }
     }
 
     //Get remaining collection

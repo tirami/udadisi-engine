@@ -182,6 +182,12 @@ var routes = Routes{
     },
     Route{
         "AdminDeleteMiner",
+        "POST",
+        "/admin/miners/{uid}",
+        AdminDeleteMiner,
+    },
+    Route{
+        "AdminDeleteMiner",
         "DELETE",
         "/admin/miners/{uid}",
         AdminDeleteMiner,

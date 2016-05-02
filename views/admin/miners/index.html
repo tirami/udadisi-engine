@@ -60,9 +60,9 @@
 								<td><a href="{{$miner.Url}}/categories/{{$miner.Uid}}" target="_blank">Configure</a></td>
 								<td>
 									<form action="/admin/miners/{{$miner.Uid}}" method="POST">
-                      <input type="hidden" name="_method" value="delete" />
+                      <input type="hidden" name="_method" value="DELETE" />
 									    <div class="button">
-									        <button type="submit">Delete</button>
+									        <button onclick="return confirm('Are you sure?')" type="submit">Delete</button>
 									    </div>
 									</form>
 								</td>
@@ -78,4 +78,6 @@
 			</div>
 		</div>
 	</body>
+  <script>
+  </script>
 </html>
