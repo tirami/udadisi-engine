@@ -101,8 +101,7 @@ func WordCountRootCollection(location string, source string, fromParam string, t
   duration  = duration / time.Duration(interval)
 
   stopwords := CollectStopwords(location, source)
-  fmt.Printf("%q\n", stopwords)
-
+  
   for i := 0; i < interval; i++ {
 
     toTime = fromTime.Add(duration)
