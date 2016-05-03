@@ -30,6 +30,15 @@ func (p *Point) Longitude() float64 {
   return p.longitude
 }
 
+// Returns Point p's latitude.
+func (p Point) LatitudeValue() float64 {
+  return p.latitude
+}
+
+// Returns Point p's longitude.
+func (p Point) LongitudeValue() float64 {
+  return p.longitude
+}
 
 // Renders the current Point to valid JSON.
 // Implements the json.Marshaller Interface.
