@@ -29,7 +29,10 @@
 
   	<div class="container-fluid">
 		<div class="row">
-			<div></div>
+			<div><h1>{{.Title}}</h1></div>
+    </div>
+    
+    <div class = "row">
 		{{ if .MinerError }}
 			<div class="alert alert-danger" role="alert">{{.MinerError}}</div>
 		{{ end }}

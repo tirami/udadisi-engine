@@ -29,13 +29,17 @@
 
   	<div class="container-fluid">
 		<div class="row">
-			<div></div>
+			<div class="col-sm-10"><h1>{{.Title}}</h1></div>
+    </div>
+
+    <div class = "row">
 		{{ if .MinerError }}
 			<div class="alert alert-danger" role="alert">{{.MinerError}}</div>
 		{{ end }}
 		{{ if .Error }}
 			<div class="alert alert-danger" role="alert">{{.Error}}</div>
 		{{ else }}
+    
 			<form action="/admin/miners/{{ .Miner.Uid }}" method="post" class="form-horizontal">
 				<input type="hidden" name="_method" value="put" />
 			   <div class="form-group">
