@@ -4,7 +4,7 @@
     <link href="/css/engine.css" rel="stylesheet">
   </head>
   <body>
-    
+
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -48,6 +48,7 @@
               <th>Geo. Coord</th>
               <th>Source</th>
               <th>URL</th>
+              <th>Stopwords</th>
               <th>Id</th>
             </tr>
           {{range $miner := .Miners}}
@@ -57,6 +58,7 @@
               <td>{{$miner.GeoCoord}}</td>
               <th>{{$miner.Source}}</td>
               <td>{{$miner.Url}}</td>
+              <td>{{$miner.Stopwords}}</td>
               <td>{{$miner.Uid}}</td>
               <td><a href="/admin/miners/{{$miner.Uid}}/edit">Edit</a></td>
               <td><a href="{{$miner.Url}}/categories/{{$miner.Uid}}" target="_blank">Configure</a></td>
