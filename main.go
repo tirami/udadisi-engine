@@ -17,7 +17,7 @@ func init() {
 
 func main() {
 
-  db.SetMaxOpenConns(1000) //tune this
+  db.SetMaxOpenConns(20) //tune this
 
   router := NewRouter()
   defer db.Close()
