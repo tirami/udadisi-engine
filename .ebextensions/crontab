@@ -1,1 +1,1 @@
-0,15,30,45 * * * * docker restart $(docker ps -q)
+10 3 * * * /sbin/shutdown -r now
